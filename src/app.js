@@ -239,18 +239,34 @@ function viewTrain() {
   </div>`;
 }
 
+/* What to do next in a module. Every module page and every quiz result leads
+   with this one step, so the way in is the same wherever you start. */
+function moduleStep(m) {
+  const i = m.lessons.findIndex((_, k) => !S.lessons[`${m.id}:${k}`]);
+  const read = lessonsDone(m);
+  if (i >= 0) return { label: read ? `Continue with lesson ${i + 1}` : "Start lesson 1", note: m.lessons[i].t, a: "lesson", i };
+  if ((S.quiz[m.id] || 0) < PASS) return { label: "Take the quiz", note: "All lessons read. Score 4 of 5 to master the module.", a: "quiz" };
+  return { label: "Review from lesson 1", note: "Module mastered.", a: "lesson", i: 0 };
+}
+const stepButton = (m, st, cls = "") => `<button class="btn ${cls}" data-a="${st.a}" data-mod="${m.id}" data-i="${st.i ?? ""}">${esc(st.label)}</button>`;
+
 function viewModule(m) {
-  const best = S.quiz[m.id] || 0;
+  const best = S.quiz[m.id] || 0, st = moduleStep(m), n = MODULES.indexOf(m);
+  const after = MODULES[n + 1];
   return `<div class="stack lesson">
     <div><button class="btn ghost sm" data-a="tab" data-to="train">All modules</button></div>
-    <div><p class="eyebrow">Module ${MODULES.indexOf(m) + 1} of ${MODULES.length}</p><h1>${esc(m.title)}</h1><p class="muted">${esc(m.blurb)}</p></div>
+    <div><p class="eyebrow">Module ${n + 1} of ${MODULES.length}</p><h1>${esc(m.title)}</h1><p class="muted">${esc(m.blurb)}</p></div>
+    <section class="card row spread">
+      <div><p class="eyebrow">${lessonsDone(m)} of ${m.lessons.length} lessons read</p><h3>${esc(st.note)}</h3></div>
+      <div class="row">${stepButton(m, st, "gold")}${best >= PASS && after ? `<button class="btn ghost" data-a="module" data-mod="${after.id}">Next module</button>` : ""}</div>
+    </section>
     <section class="card">
-      <ul class="lesson-list">${m.lessons.map((l, i) => `<li><button data-a="lesson" data-mod="${m.id}" data-i="${i}">
-        <span>${esc(l.t)}</span>${S.lessons[`${m.id}:${i}`] ? `<span class="chip good">Read</span>` : `<span class="chip gold">+10 XP</span>`}</button></li>`).join("")}</ul>
+      <ol class="lesson-list">${m.lessons.map((l, i) => { const done = S.lessons[`${m.id}:${i}`]; return `<li><button data-a="lesson" data-mod="${m.id}" data-i="${i}">
+        <span><span class="num muted">${i + 1}.</span> ${esc(l.t)}</span><span class="chip ${done ? "good" : "gold"}">${done ? "Read · review" : "Start · +10 XP"}</span></button></li>`; }).join("")}</ol>
     </section>
     <section class="card row spread">
       <div><h3>Module quiz</h3><p class="muted num">${best ? `Best score ${best}/5` : "Five questions"}${best >= PASS ? " · mastered" : ""}</p></div>
-      <button class="btn" data-a="quiz" data-mod="${m.id}">${best ? "Retake quiz" : "Take the quiz"}</button>
+      <button class="btn ${st.a === "quiz" ? "ghost" : ""}" data-a="quiz" data-mod="${m.id}">${best ? "Retake quiz" : "Take the quiz"}</button>
     </section>
   </div>`;
 }
@@ -296,7 +312,8 @@ function viewRun() {
       <p class="muted">${esc(r.verdict.text)}</p>
       ${r.verdict.xp ? `<span class="chip gold num">+${r.verdict.xp} XP</span>` : ""}
       <div class="row" style="justify-content:center">
-        <button class="btn" data-a="rerun">${pct === 1 ? "Play again" : "Try again"}</button>
+        ${r.verdict.next || ""}
+        <button class="btn ${r.verdict.next ? "ghost" : ""}" data-a="rerun">${pct === 1 ? "Play again" : "Try again"}</button>
         <button class="btn ghost" data-a="tab" data-to="${cfg.view}">Done</button>
       </div>
     </section>`;
@@ -331,9 +348,16 @@ function quizModule(id) {
       const prev = S.quiz[id] || 0;
       const xp = Math.max(0, right - prev) * 15;
       if (right > prev) S.quiz[id] = right;
+      const after = MODULES[MODULES.indexOf(m) + 1];
+      // Lead out of the quiz the same way every time: on to the next module
+      // (or the Tryout after the last one), or back into this one's lessons.
+      const onward = after
+        ? `<button class="btn gold" data-a="module" data-mod="${after.id}">Next module: ${esc(after.title)}</button>`
+        : `<button class="btn gold" data-a="tryout">Take the Tryout</button>`;
+      const back = `<button class="btn gold" data-a="lesson" data-mod="${id}" data-i="0">Review the lessons</button>`;
       return right >= PASS
-        ? { xp, touch: true, head: right === total ? "Perfect game" : "Module mastered", text: "That is 80 percent or better. On to the next one." }
-        : { xp, touch: true, head: "Not mastered yet", text: `You need ${PASS} of ${total}. Review the lessons and take another swing.` };
+        ? { xp, touch: true, next: onward, head: right === total ? "Perfect game" : "Module mastered", text: "That is 80 percent or better." }
+        : { xp, touch: true, next: back, head: "Not mastered yet", text: `You need ${PASS} of ${total}. Review the lessons and take another swing.` };
     },
   });
 }
