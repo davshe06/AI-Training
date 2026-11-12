@@ -287,6 +287,14 @@ table.ref th { text-align: left; font-family: var(--font-head); font-size: 1.05r
 table.ref td { padding: 10px 0; vertical-align: top; color: var(--ink-2); }
 table.ref tr + tr > * { border-top: 1px solid var(--line); }
 .scroll-x { overflow-x: auto; }
+table.board { width: 100%; border-collapse: collapse; font-size: 0.98rem; }
+table.board th { font-family: var(--font-head); font-size: 0.82rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-3); text-align: left; padding: 6px 12px 10px; white-space: nowrap; }
+table.board td { padding: 11px 12px; border-top: 1px solid var(--line); white-space: nowrap; }
+table.board .r { text-align: right; }
+table.board .who { font-weight: 700; white-space: normal; min-width: 9ch; }
+table.board .rank { font-family: var(--font-head); font-size: 1.25rem; font-weight: 600; color: var(--ink-3); }
+table.board .rank.top { color: var(--gold); }
+table.board tr.me td { background: var(--gold-soft); }
 .qa { display: flex; flex-direction: column; }
 .qa > div { padding: 12px 0; }
 .qa > div + div { border-top: 1px solid var(--line); }

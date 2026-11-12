@@ -299,6 +299,14 @@ table.ref th { text-align: left; font-family: var(--font-head); font-size: 1.05r
 table.ref td { padding: 10px 0; vertical-align: top; color: var(--ink-2); }
 table.ref tr + tr > * { border-top: 1px solid var(--line); }
 .scroll-x { overflow-x: auto; }
+table.board { width: 100%; border-collapse: collapse; font-size: 0.98rem; }
+table.board th { font-family: var(--font-head); font-size: 0.82rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-3); text-align: left; padding: 6px 12px 10px; white-space: nowrap; }
+table.board td { padding: 11px 12px; border-top: 1px solid var(--line); white-space: nowrap; }
+table.board .r { text-align: right; }
+table.board .who { font-weight: 700; white-space: normal; min-width: 9ch; }
+table.board .rank { font-family: var(--font-head); font-size: 1.25rem; font-weight: 600; color: var(--ink-3); }
+table.board .rank.top { color: var(--gold); }
+table.board tr.me td { background: var(--gold-soft); }
 .qa { display: flex; flex-direction: column; }
 .qa > div { padding: 12px 0; }
 .qa > div + div { border-top: 1px solid var(--line); }
@@ -345,6 +353,7 @@ dialog h4 { margin: 0 0 4px; font-family: var(--font-head); font-size: 0.82rem; 
       <a href="#home">Clubhouse</a>
       <a href="#train">Training</a>
       <a href="#games">Games</a>
+      <a href="#leaderboard">Leaderboard</a>
       <a href="#guide">Field Guide</a>
       <a href="#profile">Profile</a>
     </nav>
@@ -1557,10 +1566,44 @@ const BADGES = [
 ];
 
 /* — state — */
-const blank = () => ({ name: "", xp: 0, lessons: {}, quiz: {}, badges: {}, last: "", streak: 0, known: {}, seen: {}, best: {}, calls: {}, daily: "", cert: null });
+const blank = () => ({ pid: "", name: "", xp: 0, lessons: {}, quiz: {}, badges: {}, last: "", streak: 0, known: {}, seen: {}, best: {}, calls: {}, daily: "", cert: null });
 let S = blank();
 try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch { /* storage blocked: start fresh */ }
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* keep going in memory */ } };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* keep going in memory */ } queueScore(); };
+
+/* — shared leaderboard —
+   The one part of the app that talks to a server: a Supabase table reached
+   through three functions (see supabase/leaderboard.sql). The key below is the
+   project's publishable key, which is meant to ship in a page; the table
+   itself is closed to it. A row is tied to a random id kept in this browser,
+   and nothing is sent until the player has entered a name. */
+const BOARD = { url: "https://mqksikjcudxmoejpmijc.supabase.co", key: "sb_publishable_xV1U1tDghZyEeIZwJ_2uLw_6Hhst6as" };
+const boardOn = () => /^https:/.test(BOARD.url) && !!BOARD.key;
+const newId = () => (crypto.randomUUID ? crypto.randomUUID()
+  : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) => (+c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))).toString(16)));
+
+async function rpc(fn, args) {
+  const r = await fetch(`${BOARD.url}/rest/v1/rpc/${fn}`, {
+    method: "POST", keepalive: true, body: JSON.stringify(args),
+    headers: { apikey: BOARD.key, Authorization: `Bearer ${BOARD.key}`, "Content-Type": "application/json" },
+  });
+  if (!r.ok) throw new Error(`leaderboard ${r.status}`);
+  return r.status === 204 ? null : r.json();
+}
+
+let scoreTimer = null, scoreSent = "";
+/* Send this player's row if it changed. A failure is swallowed: training
+   must never stall on the network, and the next change retries. */
+function pushScore() {
+  clearTimeout(scoreTimer);
+  if (!boardOn() || !S.name || !S.pid) return Promise.resolve();
+  const row = { p_id: S.pid, p_name: S.name, p_xp: S.xp, p_modules: mastered(), p_badges: Object.keys(S.badges).length, p_tryout: S.cert ? S.cert.score : null, p_streak: S.streak };
+  const sig = JSON.stringify(row);
+  if (sig === scoreSent) return Promise.resolve();
+  return rpc("training_submit", row).then(() => { scoreSent = sig; }, () => {});
+}
+function queueScore() { clearTimeout(scoreTimer); scoreTimer = setTimeout(pushScore, 1500); }
+function leaveBoard(pid) { scoreSent = ""; if (boardOn() && pid) rpc("training_remove", { p_id: pid }).catch(() => {}); }
 
 const levelOf = (xp) => { let i = 0; while (i + 1 < LEVELS.length && xp >= LEVELS[i + 1][0]) i++; return i; };
 const mastered = () => MODULES.filter((m) => (S.quiz[m.id] || 0) >= PASS).length;
@@ -1623,13 +1666,14 @@ function confetti() {
 
 /* — view state. `ui.view` follows the hash; `ui.sub` is whatever is open
    inside that view (a lesson, a running quiz, a call). — */
-const VIEWS = ["home", "train", "games", "guide", "profile"];
-const ui = { view: "home", sub: null, guideTab: "roles", group: "All", q: "" };
+const VIEWS = ["home", "train", "games", "leaderboard", "guide", "profile"];
+const ui = { view: "home", sub: null, guideTab: "roles", group: "All", q: "", board: { state: "idle", rows: [] } };
 let timer = null;
 
 function go(view, sub) {
   clearInterval(timer); timer = null;
   ui.view = view; ui.sub = sub || null;
+  if (view === "leaderboard") loadBoard();
   if (location.hash !== `#${view}`) history.replaceState(null, "", `#${view}`);
   render();
   scrollTo(0, 0);
@@ -1660,7 +1704,7 @@ function render() {
   else if (sub && sub.type === "flash") html = viewFlash();
   else if (sub && sub.type === "speed") html = viewSpeed();
   else if (sub && sub.type === "call") html = viewCall();
-  else html = { home: viewHome, train: viewTrain, games: viewGames, guide: viewGuide, profile: viewProfile }[ui.view]();
+  else html = { home: viewHome, train: viewTrain, games: viewGames, leaderboard: viewBoard, guide: viewGuide, profile: viewProfile }[ui.view]();
   $("#view").innerHTML = html;
 }
 
@@ -1690,7 +1734,7 @@ function viewHome() {
           <h1>${S.name ? `Welcome back, ${esc(S.name)}` : "Welcome to camp"}</h1>
         </div>
         <p class="muted">Ten modules, four games, four live calls and a field guide. Learn how AI teams are built so you can run sharper client and candidate calls.</p>
-        ${S.name ? "" : `<form class="namebox" data-form="name"><input id="name-in" name="name" maxlength="24" placeholder="Your first name" aria-label="Your first name" autocomplete="given-name" /><button class="btn gold">Start</button></form>`}
+        ${S.name ? "" : `<form class="namebox" data-form="name"><input id="name-in" name="name" maxlength="24" placeholder="Your first name" aria-label="Your first name" autocomplete="given-name" /><button class="btn gold">Start</button></form><p class="muted" style="font-size:.85rem">Your name and score appear on the team leaderboard.</p>`}
         <div>
           <div class="meter"><i style="width:${pct}%"></i></div>
           <p class="muted num" style="margin-top:6px">${hi ? `${hi[0] - S.xp} XP to ${esc(hi[1])}` : "Top of the league"}</p>
@@ -2142,6 +2186,52 @@ function openRole(id) {
   if (ui.view === "guide" && !ui.sub && ui.guideTab === "roles") $("#guide-body").innerHTML = guideBody();
 }
 
+/* — Leaderboard — */
+function loadBoard() {
+  if (!boardOn()) return;
+  const b = ui.board;
+  b.state = "loading";
+  const mine = (b.req = {}); // a later request supersedes this one
+  pushScore()
+    .then(() => rpc("training_board", { p_id: S.pid || null }))
+    .then((rows) => { if (b.req === mine) { b.rows = rows || []; b.state = "ok"; } },
+          () => { if (b.req === mine) b.state = "error"; })
+    .then(() => { if (ui.view === "leaderboard" && !ui.sub) render(); });
+}
+
+function viewBoard() {
+  const b = ui.board;
+  const join = S.name ? "" : `<section class="card stack">
+      <div><h3>Add your name to join</h3><p class="muted">Your name, XP and badge count will be visible to everyone on the board.</p></div>
+      <form class="namebox" data-form="name"><input id="name-board" name="name" maxlength="24" placeholder="Your first name" aria-label="Your first name" autocomplete="given-name" /><button class="btn gold">Join the board</button></form>
+    </section>`;
+  let body;
+  if (!boardOn()) body = `<section class="card"><p class="muted">The leaderboard is not connected in this copy of the app.</p></section>`;
+  else if (b.state === "error") body = `<section class="card stack"><p>The leaderboard could not be reached. Your progress is still saved on this device.</p><div><button class="btn" data-a="board-refresh">Try again</button></div></section>`;
+  else if (b.state !== "ok") body = `<section class="card"><p class="muted">Loading the standings…</p></section>`;
+  else if (!b.rows.length) body = `<section class="card"><p class="muted">Nobody is on the board yet. Enter your name and finish a lesson to be first.</p></section>`;
+  else {
+    const me = b.rows.find((r) => r.me);
+    body = `${me ? `<p class="muted num">You are ranked ${me.rank} of ${me.total}.</p>` : ""}
+      <section class="card"><div class="scroll-x"><table class="board">
+        <thead><tr><th class="r">#</th><th>Player</th><th>Level</th><th class="r">XP</th><th class="r">Modules</th><th class="r">Badges</th><th class="r">Tryout</th></tr></thead>
+        <tbody>${b.rows.map((r) => `<tr class="${r.me ? "me" : ""}">
+          <td class="r num rank ${r.rank <= 3 ? "top" : ""}">${r.rank}</td>
+          <td class="who">${esc(r.name)}${r.me ? ` <span class="chip gold">You</span>` : ""}</td>
+          <td>${esc(LEVELS[levelOf(r.xp)][1])}</td>
+          <td class="r num"><b>${r.xp}</b></td>
+          <td class="r num">${r.modules}/${MODULES.length}</td>
+          <td class="r num">${r.badges}/${BADGES.length}</td>
+          <td class="r num">${r.tryout == null ? "—" : `${r.tryout}/${TRYOUT_SIZE}`}</td></tr>`).join("")}</tbody>
+      </table></div></section>`;
+  }
+  return `<div class="stack">
+    <div class="row spread"><div><h1>Leaderboard</h1><p class="muted">Everyone in camp, ranked by XP.</p></div>
+      ${boardOn() ? `<button class="btn ghost sm" data-a="board-refresh">Refresh</button>` : ""}</div>
+    ${join}${body}
+  </div>`;
+}
+
 /* — Profile — */
 function viewProfile() {
   const li = levelOf(S.xp);
@@ -2163,7 +2253,7 @@ function viewProfile() {
     </section>
     <section class="card stack"><h2>Badges</h2>${badgeGrid()}</section>
     <section class="card stack">
-      <div><h3>Start over</h3><p class="muted">Progress is saved in this browser only. Resetting clears XP, badges and scores.</p></div>
+      <div><h3>Start over</h3><p class="muted">Progress is saved in this browser. Resetting clears XP, badges and scores, and takes you off the leaderboard.</p></div>
       <div class="row">${ui.confirmReset ? `<button class="btn danger" data-a="reset-yes">Yes, erase my progress</button><button class="btn ghost" data-a="reset-no">Keep it</button>`
         : `<button class="btn ghost" data-a="reset">Reset progress</button>`}</div>
     </section>
@@ -2216,7 +2306,8 @@ const actions = {
   close: () => $("#dlg").close(),
   reset() { ui.confirmReset = true; render(); },
   "reset-no"() { ui.confirmReset = false; render(); },
-  "reset-yes"() { S = blank(); save(); ui.confirmReset = false; toast("Progress erased"); go("home"); },
+  "board-refresh": () => { loadBoard(); render(); },
+  "reset-yes"() { leaveBoard(S.pid); S = blank(); S.pid = newId(); save(); ui.confirmReset = false; toast("Progress erased"); go("home"); },
 };
 
 document.addEventListener("click", (e) => {
@@ -2232,7 +2323,10 @@ document.addEventListener("submit", (e) => {
   e.preventDefault();
   if (e.target.dataset.form !== "name") return;
   S.name = new FormData(e.target).get("name").trim();
-  save(); toast(S.name ? `Welcome, ${S.name}` : "Name cleared"); render();
+  if (!S.name) leaveBoard(S.pid);
+  save(); toast(S.name ? `Welcome, ${S.name}` : "Name cleared");
+  if (ui.view === "leaderboard") loadBoard();
+  render();
 });
 document.addEventListener("input", (e) => {
   if (e.target.id !== "guide-q") return;
@@ -2252,8 +2346,13 @@ addEventListener("hashchange", () => {
   if (VIEWS.includes(v) && (v !== ui.view || ui.sub)) go(v);
 });
 
+if (!S.pid) { S.pid = newId(); save(); }
+// Catch the last few points if the tab is closed before the timer fires.
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") pushScore(); });
+
 const startView = location.hash.slice(1);
 ui.view = VIEWS.includes(startView) ? startView : "home";
+if (ui.view === "leaderboard") loadBoard();
 render();
 
 </script>
