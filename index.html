@@ -1,0 +1,2238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<!--ARTIFACT-BODY-->
+<title>AI Spring Training</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;700&family=Barlow+Condensed:wght@500;600&display=swap" />
+<style>
+/* Layout: a scoreboard band across the top (level, XP, streak), then one
+   working view at a time on a teal ground. Gold is reserved for XP and
+   rewards. */
+:root {
+  --ground: #e3efec;
+  --ground-2: #cfe3de;
+  --surface: #ffffff;
+  --surface-2: #f1f6f5;
+  --ink: #1d1f20;
+  --ink-2: #485254;
+  --ink-3: #667073;
+  --line: rgba(29, 31, 32, 0.14);
+  --band: #1d2d3d;
+  --band-2: #2c455d;
+  --on-band: #f2f6f8;
+  --on-band-2: #b5c7d6;
+  --accent: #2f5f85;
+  --accent-soft: #e0ecf6;
+  --on-accent: #ffffff;
+  --gold: #8f5a08;
+  --gold-fill: #f0b03c;
+  --gold-soft: #fbeed0;
+  --good: #1c7449;
+  --good-soft: #dcf2e5;
+  --bad: #ad3528;
+  --bad-soft: #fbe3df;
+  --shadow: 0 1px 2px rgba(29, 45, 61, 0.07), 0 6px 18px rgba(29, 45, 61, 0.07);
+
+  --font-head: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r-card: 14px;
+  --r-ctl: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0f1a1c;
+    --ground-2: #0b1416;
+    --surface: #18272a;
+    --surface-2: #203337;
+    --ink: #e9f0f1;
+    --ink-2: #b9c6c9;
+    --ink-3: #93a2a5;
+    --line: rgba(233, 240, 241, 0.16);
+    --band: #0a1215;
+    --band-2: #1a2b33;
+    --on-band: #f2f6f8;
+    --on-band-2: #a9bcc6;
+    --accent: #8fc0ea;
+    --accent-soft: #1d3649;
+    --on-accent: #0c1a24;
+    --gold: #f0c468;
+    --gold-fill: #e0a93a;
+    --gold-soft: #382d12;
+    --good: #74d6a4;
+    --good-soft: #153324;
+    --bad: #f3a094;
+    --bad-soft: #3f1f1b;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0f1a1c;
+  --ground-2: #0b1416;
+  --surface: #18272a;
+  --surface-2: #203337;
+  --ink: #e9f0f1;
+  --ink-2: #b9c6c9;
+  --ink-3: #93a2a5;
+  --line: rgba(233, 240, 241, 0.16);
+  --band: #0a1215;
+  --band-2: #1a2b33;
+  --on-band: #f2f6f8;
+  --on-band-2: #a9bcc6;
+  --accent: #8fc0ea;
+  --accent-soft: #1d3649;
+  --on-accent: #0c1a24;
+  --gold: #f0c468;
+  --gold-fill: #e0a93a;
+  --gold-soft: #382d12;
+  --good: #74d6a4;
+  --good-soft: #153324;
+  --bad: #f3a094;
+  --bad-soft: #3f1f1b;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.25);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  background-image: linear-gradient(180deg, var(--ground) 0%, var(--ground-2) 100%);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; z-index: 10;
+  height: env(safe-area-inset-top, 0px); background: var(--band);
+}
+h1, h2, h3 { font-family: var(--font-head); font-weight: 600; line-height: 1.1; margin: 0; text-wrap: balance; }
+h1 { font-size: 2.1rem; }
+h2 { font-size: 1.6rem; }
+h3 { font-size: 1.25rem; }
+p { margin: 0; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--gold-fill); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+.eyebrow {
+  font-family: var(--font-head); font-size: 0.82rem; font-weight: 600;
+  letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-3);
+}
+.muted { color: var(--ink-2); }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.spread { justify-content: space-between; }
+
+/* — scoreboard band — */
+.band {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9;
+  background: var(--band); color: var(--on-band);
+}
+.band-in, .page {
+  max-width: 1080px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.band-in { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px; padding-block: 10px 0; }
+.brand { font-family: var(--font-head); font-weight: 600; font-size: 1.35rem; letter-spacing: 0.02em; text-transform: uppercase; }
+.brand b { color: var(--gold-fill); font-weight: 600; }
+.score { margin-left: auto; display: flex; align-items: center; gap: 14px; min-width: 0; }
+.score .lvl { font-family: var(--font-head); font-size: 1rem; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+.score .xp { color: var(--gold-fill); font-weight: 700; white-space: nowrap; }
+.score .streak { color: var(--on-band-2); white-space: nowrap; font-size: 0.9rem; }
+.meter { height: 8px; border-radius: 99px; background: var(--band-2); overflow: hidden; width: 110px; }
+.meter i { display: block; height: 100%; background: var(--gold-fill); border-radius: 99px; transition: width 0.5s ease; }
+.tabs { display: flex; gap: 2px; width: 100%; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs a {
+  font-family: var(--font-head); font-size: 1.05rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--on-band-2); text-decoration: none; padding: 8px 14px 9px; border-bottom: 3px solid transparent; white-space: nowrap;
+}
+.tabs a:hover { color: var(--on-band); }
+.tabs a[aria-current="page"] { color: var(--on-band); border-bottom-color: var(--gold-fill); }
+
+.page { padding-block: 24px 64px; }
+
+/* — surfaces — */
+.card { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 20px; min-width: 0; }
+.grid { display: grid; gap: 14px; }
+.g2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.g3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: 1px solid transparent; border-radius: var(--r-ctl); padding: 10px 18px;
+  background: var(--accent); color: var(--on-accent); font-weight: 700; text-decoration: none;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn.gold { background: var(--gold-fill); color: #2a1c00; }
+.btn.ghost { background: transparent; color: var(--accent); border-color: var(--line); }
+.btn.ghost:hover { background: var(--accent-soft); filter: none; }
+.btn.sm { padding: 6px 12px; font-size: 0.92rem; }
+.btn.danger { background: var(--bad); color: var(--surface); }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; border-radius: 99px; padding: 3px 11px;
+  background: var(--surface-2); border: 1px solid var(--line); font-size: 0.86rem; color: var(--ink-2); white-space: nowrap;
+}
+button.chip:hover, button.chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.chip.gold { background: var(--gold-soft); color: var(--gold); border-color: transparent; font-weight: 700; }
+.chip.good { background: var(--good-soft); color: var(--good); border-color: transparent; font-weight: 700; }
+.bar { height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+.bar.done i { background: var(--good); }
+
+/* — home — */
+.hero { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: stretch; }
+@media (max-width: 760px) { .hero { grid-template-columns: minmax(0, 1fr); } }
+.hero .welcome { background: var(--band); color: var(--on-band); }
+.hero .welcome .eyebrow, .hero .welcome .muted { color: var(--on-band-2); }
+.hero .welcome h1 { font-size: 2.4rem; }
+.hero .meter { width: 100%; height: 12px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.stat b { display: block; font-family: var(--font-head); font-size: 1.9rem; line-height: 1; color: var(--on-band); }
+.stat span { font-size: 0.82rem; color: var(--on-band-2); }
+.namebox { display: flex; gap: 8px; flex-wrap: wrap; }
+.namebox input, .search {
+  flex: 1 1 160px; min-width: 0; border: 1px solid var(--line); border-radius: var(--r-ctl);
+  padding: 9px 12px; background: var(--surface); color: var(--ink);
+}
+.lineup { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.lineup li + li { border-top: 1px solid var(--line); }
+.lineup button {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+  width: 100%; text-align: left; background: none; border: 0; padding: 13px 4px; border-radius: 8px;
+}
+.lineup button:hover { background: var(--surface-2); }
+.lineup .no { font-family: var(--font-head); font-size: 1.5rem; font-weight: 600; color: var(--ink-3); text-align: center; }
+.lineup .ttl { font-family: var(--font-head); font-size: 1.2rem; font-weight: 600; }
+.lineup .sub { font-size: 0.9rem; color: var(--ink-2); }
+.lineup .bar { margin-top: 6px; max-width: 260px; }
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 12px; }
+.badge { text-align: center; padding: 12px 8px; border-radius: 12px; background: var(--surface-2); }
+.badge .medal {
+  width: 52px; height: 52px; margin: 0 auto 8px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--font-head); font-weight: 600; font-size: 1.05rem; letter-spacing: 0.03em;
+  background: var(--surface); color: var(--ink-3); border: 2px dashed var(--line);
+}
+.badge.on .medal { background: var(--gold-fill); color: #2a1c00; border: 2px solid var(--gold); }
+.badge b { display: block; font-family: var(--font-head); font-size: 1.05rem; font-weight: 600; }
+.badge span { font-size: 0.8rem; color: var(--ink-2); line-height: 1.3; display: block; }
+.badge:not(.on) b { color: var(--ink-3); }
+
+/* — lessons — */
+.lesson { max-width: 720px; margin: 0 auto; }
+.lesson .body { display: flex; flex-direction: column; gap: 12px; font-size: 1.06rem; }
+.dots { display: flex; gap: 6px; }
+.dots i { width: 22px; height: 5px; border-radius: 99px; background: var(--line); }
+.dots i.on { background: var(--accent); }
+.say { background: var(--gold-soft); border-radius: 12px; padding: 14px 16px; }
+.say .eyebrow { color: var(--gold); }
+.say p { font-size: 1.08rem; font-weight: 500; }
+.lesson-list { list-style: none; margin: 0; padding: 0; }
+.lesson-list li + li { border-top: 1px solid var(--line); }
+.lesson-list button { display: flex; justify-content: space-between; gap: 12px; align-items: center; width: 100%; background: none; border: 0; padding: 12px 4px; text-align: left; border-radius: 8px; }
+.lesson-list button:hover { background: var(--surface-2); }
+
+/* — question runner — */
+.run { max-width: 720px; margin: 0 auto; }
+.run .q { font-size: 1.55rem; }
+.opts { display: flex; flex-direction: column; gap: 10px; }
+.opt {
+  display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: start; text-align: left;
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-ctl); padding: 12px 14px; font-size: 1.02rem;
+}
+.opt kbd { font-family: var(--font-head); font-size: 0.95rem; color: var(--ink-3); border: 1px solid var(--line); border-radius: 6px; text-align: center; line-height: 1.5; }
+.opt:not(:disabled):hover { border-color: var(--accent); background: var(--accent-soft); }
+.opt:disabled { cursor: default; color: var(--ink-2); }
+.opt.right { border-color: var(--good); background: var(--good-soft); color: var(--ink); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-soft); color: var(--ink); }
+.why { border-radius: 12px; padding: 12px 16px; }
+.why.good { background: var(--good-soft); }
+.why.bad { background: var(--bad-soft); }
+.why b { display: block; font-family: var(--font-head); font-size: 1.15rem; }
+.why.good b { color: var(--good); }
+.why.bad b { color: var(--bad); }
+.result { text-align: center; max-width: 560px; margin: 0 auto; align-items: center; }
+.result .big { font-family: var(--font-head); font-size: 4rem; font-weight: 600; line-height: 1; }
+.timer { font-family: var(--font-head); font-size: 1.6rem; font-weight: 600; }
+.timer.low { color: var(--bad); }
+
+/* — flash cards — */
+.flash {
+  width: 100%; min-height: 220px; border: 0; border-radius: var(--r-card); box-shadow: var(--shadow);
+  background: var(--surface); padding: 28px; display: grid; place-items: center; text-align: center;
+}
+.flash .term { font-family: var(--font-head); font-size: 2.4rem; font-weight: 600; }
+.flash .def { font-size: 1.15rem; max-width: 46ch; }
+
+/* — call simulator — */
+.chat { display: flex; flex-direction: column; gap: 12px; }
+.msg { max-width: 86%; border-radius: 14px; padding: 11px 15px; }
+.msg.them { background: var(--surface); box-shadow: var(--shadow); align-self: flex-start; border-bottom-left-radius: 4px; }
+.msg.you { background: var(--accent); color: var(--on-accent); align-self: flex-end; border-bottom-right-radius: 4px; }
+.msg .who { font-family: var(--font-head); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.75; }
+.fb { align-self: flex-end; max-width: 86%; font-size: 0.93rem; border-radius: 10px; padding: 7px 12px; }
+.fb.p3 { background: var(--good-soft); color: var(--good); }
+.fb.p1 { background: var(--gold-soft); color: var(--gold); }
+.fb.p0 { background: var(--bad-soft); color: var(--bad); }
+
+/* — field guide — */
+.subtabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.rolecard { text-align: left; border: 0; display: flex; flex-direction: column; gap: 8px; }
+.rolecard:hover { outline: 2px solid var(--accent); }
+.rolecard p { font-size: 0.93rem; color: var(--ink-2); }
+.pips { display: inline-flex; gap: 3px; vertical-align: middle; }
+.pips i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.pips i.on { background: var(--gold-fill); }
+.seen { color: var(--good); font-size: 0.82rem; font-weight: 700; }
+table.ref { width: 100%; border-collapse: collapse; font-size: 0.96rem; }
+table.ref th { text-align: left; font-family: var(--font-head); font-size: 1.05rem; vertical-align: top; padding: 10px 14px 10px 0; width: 34%; }
+table.ref td { padding: 10px 0; vertical-align: top; color: var(--ink-2); }
+table.ref tr + tr > * { border-top: 1px solid var(--line); }
+.scroll-x { overflow-x: auto; }
+.qa { display: flex; flex-direction: column; }
+.qa > div { padding: 12px 0; }
+.qa > div + div { border-top: 1px solid var(--line); }
+.qa .they { font-weight: 700; }
+.phase { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 6px 16px; padding: 14px 0; align-items: start; }
+.phase + .phase { border-top: 1px solid var(--line); }
+@media (max-width: 560px) { .phase { grid-template-columns: minmax(0, 1fr); } }
+
+dialog {
+  border: 0; border-radius: var(--r-card); padding: 0; background: var(--surface); color: var(--ink);
+  width: min(620px, calc(100vw - 32px)); max-height: calc(100vh - 48px); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+dialog::backdrop { background: rgba(10, 18, 21, 0.6); }
+dialog .in { padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+dialog ul { margin: 0; padding-left: 20px; }
+dialog h4 { margin: 0 0 4px; font-family: var(--font-head); font-size: 0.82rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-3); }
+
+/* — toasts and confetti — */
+.toasts {
+  position: fixed; z-index: 30; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; pointer-events: none;
+  right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+.toast {
+  background: var(--band); color: var(--on-band); border-radius: 10px; padding: 9px 14px; box-shadow: var(--shadow);
+  font-weight: 700; border-left: 4px solid var(--gold-fill); animation: rise 0.25s ease-out;
+}
+.toast small { display: block; font-weight: 400; color: var(--on-band-2); }
+@keyframes rise { from { transform: translateY(8px); opacity: 0; } }
+#confetti { position: fixed; inset: 0; z-index: 29; pointer-events: none; width: 100%; height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+</style>
+<!--/ARTIFACT-HEAD-->
+</head>
+<body>
+<!--ARTIFACT-MAIN-->
+<header class="band">
+  <div class="band-in">
+    <div class="brand">AI <b>Spring Training</b></div>
+    <div class="score" id="score" aria-live="polite"></div>
+    <nav class="tabs" id="tabs" aria-label="Sections">
+      <a href="#home">Clubhouse</a>
+      <a href="#train">Training</a>
+      <a href="#games">Games</a>
+      <a href="#guide">Field Guide</a>
+      <a href="#profile">Profile</a>
+    </nav>
+  </div>
+</header>
+<main class="page" id="view"></main>
+<dialog id="dlg" aria-labelledby="dlg-title"></dialog>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<canvas id="confetti" hidden></canvas>
+<script>
+/* The curriculum. Ten modules; each is a handful of short lesson cards and a
+   five-question quiz. Every lesson ends with a line the rep can actually say
+   on a call. Product names move fast — lessons stick to vendors and product
+   families rather than model version numbers so they age slowly. */
+
+const MODULES = [
+  {
+    id: "foundations",
+    title: "AI Foundations",
+    blurb: "How the technology works, in the words clients use.",
+    lessons: [
+      {
+        t: "AI, machine learning, generative AI",
+        body: [
+          "AI is the umbrella term. Machine learning is the part that learns patterns from data, such as fraud scores, demand forecasts and recommendations. Companies have hired for it for over a decade.",
+          "Generative AI is the newer layer. It produces text, code, images and audio. It runs on large language models (LLMs) such as GPT, Claude, Gemini and Llama.",
+          "Most enterprises now have both. A bank's credit model is classic ML. Its internal assistant that drafts emails is generative AI. They need different people.",
+        ],
+        say: "When you say AI, is this predictive models on your own data, or generative AI and assistants? The team looks different for each.",
+      },
+      {
+        t: "How an LLM works",
+        body: [
+          "An LLM predicts the next piece of text. Text is split into tokens, which are roughly word fragments. Vendors bill per token in and per token out, so token volume is the cost driver.",
+          "The context window is how much text the model can consider at once: the instructions, the documents you hand it and the conversation so far. Anything outside the window, the model does not know.",
+          "A model's knowledge stops at its training cutoff. It knows nothing about a client's private data unless that data is put in front of it.",
+        ],
+        say: "Is the model going to need your internal data to be useful? That tells me whether you need data and retrieval skills, or just application skills.",
+      },
+      {
+        t: "Three ways to make a model yours",
+        body: [
+          "Prompting: write better instructions and examples. Cheapest and fastest. This has grown into context engineering, which is deciding what information the model sees at each step.",
+          "RAG (retrieval-augmented generation): search the company's documents, then hand the relevant passages to the model with the question. This is how most enterprise assistants answer from internal knowledge.",
+          "Fine-tuning: further train a model on your own examples to change its behavior or style. More expensive, needs ML skills, and is used far less often than clients expect.",
+        ],
+        say: "Most teams get there with retrieval before they ever fine-tune. Which approach is your team planning?",
+      },
+      {
+        t: "Hallucinations and evals",
+        body: [
+          "A hallucination is a confident answer that is wrong. It is a normal property of how LLMs work, so production systems are built to catch and reduce it.",
+          "Evals are the tests for AI systems. A team keeps a set of real questions with known good answers and scores the system against it every time something changes.",
+          "A team with no evals cannot tell whether a change made things better or worse. Asking about evals is the fastest way to tell a serious AI team from a demo team.",
+        ],
+        say: "How are you measuring whether the answers are right today? Who owns that?",
+      },
+      {
+        t: "Open, closed, hosted, self-hosted",
+        body: [
+          "Closed models such as GPT, Claude and Gemini are reached through an API. Open-weight models such as Llama and Mistral can be downloaded and run on your own hardware.",
+          "Most enterprises reach models through their cloud: Microsoft Foundry, Amazon Bedrock or Google Vertex AI. That keeps data, billing and security inside a contract they already have.",
+          "Self-hosting gives more control and needs far more skill: GPUs, serving software and platform engineers. Regulated and defense clients ask for it most.",
+        ],
+        say: "Which cloud is your AI work running in? That narrows the candidate pool right away.",
+      },
+    ],
+    quiz: [
+      { q: "A client says their chatbot 'makes things up'. What is the standard term?", a: ["Overfitting", "Hallucination", "Token drift", "Latency"], c: 1, why: "A hallucination is a confident but wrong answer. It is expected behavior that teams reduce with retrieval, guardrails and evals." },
+      { q: "A client wants an assistant that answers from their 40,000 policy documents. Which approach do most teams start with?", a: ["Fine-tuning a model on the documents", "Training a new model from scratch", "RAG: retrieve relevant passages and pass them to the model", "Buying more GPUs"], c: 2, why: "RAG is the default for answering from private documents. Fine-tuning changes behavior, and it is a poor way to load facts." },
+      { q: "What mostly drives the bill on an LLM API?", a: ["Number of user accounts", "Tokens in and out", "Number of prompts saved", "Model download size"], c: 1, why: "Usage is metered in tokens: the text sent in plus the text generated." },
+      { q: "Which question best separates a production AI team from a demo team?", a: ["Which model do you like best?", "How do you evaluate whether outputs are correct?", "Do you use dark mode?", "How many prompts have you written?"], c: 1, why: "Evals are how real teams know a system works and keeps working." },
+      { q: "A defense contractor cannot send data to an outside API. What are they most likely to need?", a: ["A prompt library", "Self-hosted open-weight models and platform engineers to run them", "A no-code chatbot builder", "More Copilot licenses"], c: 1, why: "Self-hosting open-weight models keeps data in their environment, and it needs GPU and platform skills." },
+    ],
+  },
+  {
+    id: "platforms",
+    title: "Platforms & Tools",
+    blurb: "The vendor map, and what each name on a req tells you.",
+    lessons: [
+      {
+        t: "The model labs",
+        body: [
+          "OpenAI (GPT, ChatGPT), Anthropic (Claude), Google (Gemini), Meta (Llama, open-weight), Mistral, xAI (Grok) and Cohere build the models.",
+          "Clients rarely hire for one model. Skills transfer between them, and most production systems are built so the model can be swapped.",
+          "Treat a model name on a req as a preference. The real requirements sit in the layers around it.",
+        ],
+        say: "If a strong candidate built the same thing on a different model, would you see them? Most teams say yes.",
+      },
+      {
+        t: "The three clouds",
+        body: [
+          "Microsoft: Microsoft Foundry (formerly Azure AI Foundry) with Azure OpenAI, plus Microsoft 365 Copilot and Copilot Studio. Strongest where the client already runs on Microsoft.",
+          "AWS: Amazon Bedrock for model access and agents, SageMaker for training and hosting ML models, Amazon Q for assistants.",
+          "Google Cloud: Vertex AI for models and ML, Gemini across Workspace, and Gemini Enterprise for agents. The cloud is the hardest requirement on most reqs, because security approvals are tied to it.",
+        ],
+        say: "Azure, AWS or Google? And is that a hard requirement, or where you happen to be today?",
+      },
+      {
+        t: "Data platforms",
+        body: [
+          "Databricks and Snowflake are the two names you will hear most. Both store and process company data and both now build and serve AI on top of it.",
+          "Microsoft Fabric and Google BigQuery play the same role inside their clouds. Around them sit pipeline tools: dbt, Airflow, Fivetran and Kafka.",
+          "Vector databases store text as numbers so it can be searched by meaning. Pinecone, Weaviate, Qdrant and pgvector are the usual ones. They are the search half of RAG.",
+        ],
+        say: "Where does the data for this live today, and is it ready for an AI system to use?",
+      },
+      {
+        t: "AI inside business apps",
+        body: [
+          "The software clients already own now ships with agents: Salesforce Agentforce, ServiceNow AI Agents, Workday, SAP Joule and Microsoft 365 Copilot.",
+          "These need configuration, integration, data clean-up and governance. The work goes to people who know the platform first and AI second.",
+          "This is a large and under-served market. A Salesforce architect who has shipped Agentforce is worth more to that client than a general AI engineer.",
+        ],
+        say: "Are you building your own AI, or switching on the AI in platforms you already own? Or both?",
+      },
+      {
+        t: "The builder's toolbox",
+        body: [
+          "Frameworks for building apps and agents: LangChain and LangGraph, LlamaIndex, CrewAI, Microsoft Agent Framework, and the agent SDKs from OpenAI, Anthropic and Google.",
+          "Coding assistants: GitHub Copilot, Cursor, Claude Code and OpenAI Codex. Many clients now expect every engineer to work with one.",
+          "Evaluation and monitoring: LangSmith, Langfuse, Arize, Braintrust, MLflow and Weights & Biases. A candidate who names these has usually run something in production.",
+        ],
+        say: "What is the team building with today? I will match on the framework where it matters and flex where it does not.",
+      },
+    ],
+    quiz: [
+      { q: "A req lists 'Amazon Bedrock'. Which cloud is the client on?", a: ["Azure", "AWS", "Google Cloud", "Oracle"], c: 1, why: "Bedrock is AWS's service for model access and agents." },
+      { q: "Which pair are the two data platforms you will hear most on AI reqs?", a: ["Databricks and Snowflake", "Cursor and Copilot", "Zapier and Make", "Pinecone and Jira"], c: 0, why: "Databricks and Snowflake hold the data and increasingly run the AI on top of it." },
+      { q: "What is a vector database used for?", a: ["Hosting websites", "Searching text by meaning, usually for RAG", "Storing payroll", "Training GPUs"], c: 1, why: "Vector databases power semantic search, which is the retrieval step in RAG." },
+      { q: "A client is rolling out Salesforce Agentforce. Who is usually the best first candidate?", a: ["A research scientist with a PhD", "A Salesforce architect or developer with Agentforce delivery experience", "A GPU cluster engineer", "A data annotator"], c: 1, why: "AI inside a business platform is led by people who know that platform." },
+      { q: "On most reqs, which requirement is hardest to flex?", a: ["The exact model", "The cloud platform", "The coding assistant", "The laptop brand"], c: 1, why: "Security approvals, data and contracts are tied to the cloud. Model and framework skills transfer more easily." },
+    ],
+  },
+  {
+    id: "roles",
+    title: "The AI Roster",
+    blurb: "Who does what, and which role the client actually needs.",
+    lessons: [
+      {
+        t: "The builders",
+        body: [
+          "AI Engineer: builds applications on top of existing models. Software engineer first. Works with APIs, RAG, agents and evals. This is the highest-volume AI req.",
+          "ML Engineer: trains, tunes and deploys models. Deeper math and infrastructure. Data Scientist: analysis, experiments and predictive models.",
+          "Clients often write 'ML Engineer' when they mean 'AI Engineer'. Ask whether the person will train models or build with existing ones.",
+        ],
+        say: "Will this person be training models, or building products on top of models that already exist?",
+      },
+      {
+        t: "The forward deployed engineer",
+        body: [
+          "A forward deployed engineer (FDE) is embedded with a customer or business unit and builds working software against their real problem. The role started at Palantir and is now common at AI labs and software vendors.",
+          "It mixes strong engineering with consulting skills: discovery, stakeholder handling and shipping fast in someone else's messy environment.",
+          "Enterprises ask for the same shape under other titles: AI solutions engineer, applied AI engineer, embedded AI engineer. The mix is rare, so screen for both halves.",
+        ],
+        say: "Do you need someone who builds to a spec, or someone who sits with the business, finds the problem and ships the fix?",
+      },
+      {
+        t: "The data team",
+        body: [
+          "Data Engineer: builds the pipelines that move and clean data. AI projects stall most often here, which makes this the most dependable AI-adjacent req.",
+          "Analytics Engineer: models data for reporting, often with dbt. Data Architect: designs how data is stored and shared. Data Steward: owns quality and definitions.",
+          "If a client's AI pilot gives poor answers, the cause is usually the data. Offer the data team before a second AI engineer.",
+        ],
+        say: "When the pilot gave a bad answer, was the model wrong or was the data behind it wrong?",
+      },
+      {
+        t: "Platform and operations",
+        body: [
+          "MLOps or LLMOps Engineer: gets models and AI apps deployed, monitored and updated safely. AI Platform Engineer: runs the shared infrastructure, including GPUs and model gateways.",
+          "AI Architect: designs the whole system and chooses the platforms. Evaluation Engineer or AI QA: builds the tests that prove the system works.",
+          "These reqs appear when a client moves from pilot to production. A client with five pilots and nothing live is usually missing this layer.",
+        ],
+        say: "How many of your pilots have reached production? What stopped the others?",
+      },
+      {
+        t: "Govern, secure, adopt",
+        body: [
+          "AI Governance Lead: sets policy, keeps the inventory of AI systems, runs risk reviews and tracks regulation. AI Security Engineer: defends AI systems and tests them by attacking them.",
+          "AI Trainer has two meanings. One trains the model, by labeling data and rating answers, and is often a subject expert. The other trains the workforce to use AI. Always ask which.",
+          "AI Product Manager and Change or Adoption Lead decide what gets built and get people to use it. Low adoption is the most common reason AI spend disappoints.",
+        ],
+        say: "When you say AI trainer, do you mean someone improving the model, or someone teaching your people to use it?",
+      },
+    ],
+    quiz: [
+      { q: "A client wants someone to 'build a support assistant on Claude using our knowledge base'. Which title fits best?", a: ["Data Scientist", "AI Engineer", "Research Scientist", "Data Steward"], c: 1, why: "Building an application on an existing model with retrieval is AI engineering." },
+      { q: "What sets a forward deployed engineer apart?", a: ["They only write documentation", "They are embedded with the customer and combine engineering with consulting", "They work only on hardware", "They manage the sales pipeline"], c: 1, why: "FDEs build in the customer's environment and own the problem end to end." },
+      { q: "A pilot gives wrong answers because source records are duplicated and out of date. Who should you offer first?", a: ["Another AI Engineer", "A Data Engineer", "A Prompt Engineer", "An AI Product Manager"], c: 1, why: "Poor data is the usual cause. Data engineering fixes the input." },
+      { q: "A client says 'we need an AI trainer'. What do you ask first?", a: ["What is the bill rate?", "Do you mean training the model or training your people?", "Which GPU do you use?", "Is it remote?"], c: 1, why: "The title covers two very different jobs: model data work and workforce enablement." },
+      { q: "A client has six pilots and none in production. Which layer are they most likely missing?", a: ["Platform, MLOps and evaluation", "More data scientists", "A second chatbot vendor", "Graphic design"], c: 0, why: "Getting to production needs deployment, monitoring and evaluation skills." },
+    ],
+  },
+  {
+    id: "data",
+    title: "Data Foundations",
+    blurb: "Why every AI project is a data project first.",
+    lessons: [
+      {
+        t: "AI is only as good as the data",
+        body: [
+          "An AI system answers from what it is given. If the documents are stale, duplicated or badly permissioned, the answers will be too.",
+          "Data readiness means the data is findable, clean, current, and access-controlled. Few companies are there when they start.",
+          "This is why data engineering demand rises with every AI budget. It is the most reliable opening in an AI conversation.",
+        ],
+        say: "If I asked your AI a question today, would it be answering from clean, current data?",
+      },
+      {
+        t: "Pipelines, warehouses, lakehouses",
+        body: [
+          "A pipeline moves data from where it is created to where it is used. ETL and ELT describe the order of extract, transform and load.",
+          "A warehouse stores structured tables for reporting. A lake stores raw files. A lakehouse combines them, and is the model behind Databricks, Snowflake and Fabric.",
+          "Listen for the stack: SQL and Python everywhere, then Spark, dbt, Airflow and Kafka. Those are the screening keywords for data engineers.",
+        ],
+        say: "Is your data platform settled, or is that being built alongside the AI work?",
+      },
+      {
+        t: "Unstructured data and retrieval",
+        body: [
+          "Most company knowledge is unstructured: PDFs, emails, tickets, contracts and call transcripts. Generative AI is the first technology that reads it well.",
+          "To use it, teams split documents into chunks, turn each chunk into an embedding (a list of numbers that captures meaning) and store those in a vector database.",
+          "Good retrieval is hard. Chunking, ranking and permissions decide answer quality. Candidates who have tuned retrieval are valuable.",
+        ],
+        say: "How much of what the AI needs is sitting in documents rather than databases?",
+      },
+      {
+        t: "Governance and access",
+        body: [
+          "Data governance decides who can see what, where data came from and how long it is kept. Tools include Unity Catalog, Microsoft Purview and Collibra.",
+          "AI raises the stakes. An assistant connected to everything will happily show a salary file to anyone who asks, unless permissions are right.",
+          "Many Copilot rollouts pause for this reason. The fix is data governance and clean-up work, which is steady project demand.",
+        ],
+        say: "Before you switched Copilot on, did anyone review what it can see?",
+      },
+    ],
+    quiz: [
+      { q: "What is an embedding?", a: ["A type of GPU", "A list of numbers that captures the meaning of text", "A software license", "A dashboard"], c: 1, why: "Embeddings let systems search by meaning, which powers retrieval." },
+      { q: "A Copilot rollout is paused because staff could surface confidential HR files. What work fixes it?", a: ["Buying a bigger model", "Data governance and permissions clean-up", "A new logo", "More prompt training"], c: 1, why: "The assistant exposes whatever permissions allow. Governance and access clean-up is the fix." },
+      { q: "Which stack most clearly signals a data engineer?", a: ["Figma, Sketch, Canva", "SQL, Python, Spark, dbt, Airflow", "Excel, Word, Outlook", "Jira, Confluence, Slack"], c: 1, why: "Those are the core pipeline and transformation tools." },
+      { q: "Why does data engineering demand rise with AI budgets?", a: ["AI replaces data engineers", "AI systems depend on clean, current, accessible data", "Data engineers train LLMs from scratch", "It does not"], c: 1, why: "Data readiness is the precondition for useful AI." },
+      { q: "A lakehouse is best described as:", a: ["A vacation benefit", "A platform combining raw file storage with warehouse-style tables", "A type of chatbot", "A security framework"], c: 1, why: "It joins the data lake and the warehouse. Databricks, Snowflake and Fabric all follow this model." },
+    ],
+  },
+  {
+    id: "automation",
+    title: "Low-Code, No-Code & Automation",
+    blurb: "The fastest-moving work, often owned outside IT.",
+    lessons: [
+      {
+        t: "The spectrum",
+        body: [
+          "No-code tools build with clicks and plain language. Low-code adds some scripting. Pro-code is traditional software development.",
+          "Power Apps, Mendix, OutSystems and Appian build applications. Zapier, Make, n8n and Workato connect systems. Power Automate does both inside Microsoft.",
+          "The buyer is often a business function such as finance, HR or operations. That gives you a second door into the account.",
+        ],
+        say: "Who is asking for this, IT or the business? And who will maintain it once it is live?",
+      },
+      {
+        t: "RPA and intelligent automation",
+        body: [
+          "Robotic process automation (RPA) uses software bots to click through screens the way a person would. UiPath, Automation Anywhere and Power Automate lead it.",
+          "RPA is rigid: when the screen changes, the bot breaks. Adding AI lets automation read documents and handle exceptions. Vendors call this intelligent or agentic automation.",
+          "Clients with large RPA estates are modernizing them. They need RPA developers who have added AI skills, plus business analysts who map the process.",
+        ],
+        say: "How many bots are you running, and how much effort goes into keeping them working?",
+      },
+      {
+        t: "Copilot Studio and the Power Platform",
+        body: [
+          "Microsoft's Power Platform is Power Apps, Power Automate, Power BI and Copilot Studio. Copilot Studio is where clients build their own agents on Microsoft.",
+          "Because most enterprises already license it, this is where a great deal of first agent work happens.",
+          "The roles: Power Platform developer, Copilot Studio developer, solution architect and platform administrator. Certifications such as PL-200 and PL-400 help you screen.",
+        ],
+        say: "Are your teams already building in Power Platform? Who governs what gets built?",
+      },
+      {
+        t: "Citizen developers and guardrails",
+        body: [
+          "A citizen developer is a business user who builds their own apps and automations. AI app builders such as Lovable, Bolt, Replit and v0 have made this faster.",
+          "Uncontrolled, it produces hundreds of unowned apps touching sensitive data. Clients respond with a center of excellence (CoE) that sets rules and reviews builds.",
+          "A CoE needs a lead, an architect, an administrator and trainers. It is often a multi-seat project sale.",
+        ],
+        say: "Do you know how many apps and automations your business users have built? Who reviews them?",
+      },
+    ],
+    quiz: [
+      { q: "What does RPA do?", a: ["Trains large language models", "Uses software bots to perform screen-based tasks the way a person would", "Hosts databases", "Tests network security"], c: 1, why: "RPA automates repetitive clicks and keystrokes across existing applications." },
+      { q: "Which tool is Microsoft's platform for building custom agents?", a: ["Copilot Studio", "UiPath", "Snowflake", "Cursor"], c: 0, why: "Copilot Studio is the agent builder within the Power Platform." },
+      { q: "A client has 300 apps built by business users and no oversight. What do they need?", a: ["More licenses", "A center of excellence with governance, architecture and admin roles", "A research scientist", "Nothing"], c: 1, why: "A CoE brings standards, review and ownership to citizen development." },
+      { q: "Why is automation often a second door into an account?", a: ["It needs no approval", "The buyer is often a business function rather than IT", "It is always free", "Recruiters build the bots"], c: 1, why: "Finance, HR and operations leaders frequently sponsor automation work." },
+      { q: "What is the main weakness of classic RPA?", a: ["It needs GPUs", "It is rigid and breaks when screens or processes change", "It cannot run on Windows", "It requires a PhD"], c: 1, why: "Bots follow fixed steps. AI adds the flexibility to handle variation." },
+    ],
+  },
+  {
+    id: "agents",
+    title: "Agentic AI",
+    blurb: "Agents, tools, harnesses and orchestration without the hype.",
+    lessons: [
+      {
+        t: "What an agent is",
+        body: [
+          "A chatbot answers. An agent acts. An agent is a model that is given a goal and tools, then works in a loop: decide a step, use a tool, read the result, decide the next step.",
+          "Tools are what let it act: search, run code, query a database, send an email, update a ticket.",
+          "The more an agent is allowed to do on its own, the more testing, permissions and oversight it needs. Autonomy is a dial the client sets.",
+        ],
+        say: "What would the agent be allowed to do on its own, and where does a person need to approve?",
+      },
+      {
+        t: "Harnesses",
+        body: [
+          "The harness is the software around the model that makes it an agent. It runs the loop, supplies tools, manages what is in the context window, enforces permissions and keeps memory.",
+          "Claude Code, OpenAI Codex and Cursor are harnesses for coding. Companies also build their own for their own workflows. The same model performs very differently in a good harness.",
+          "You will also hear 'eval harness'. That is the test rig that runs an AI system against a set of cases and scores it. Both meanings signal real engineering.",
+        ],
+        say: "Is your team building its own agent harness or using an off-the-shelf one?",
+      },
+      {
+        t: "Orchestration and multi-agent systems",
+        body: [
+          "Orchestration is coordinating many steps, tools or agents to finish a larger job. One common design is an orchestrator agent that hands tasks to specialist agents.",
+          "Frameworks include LangGraph, CrewAI, Microsoft Agent Framework and the vendor agent SDKs. Workflow engines such as Temporal keep long jobs reliable.",
+          "This is distributed systems work. Strong backend engineers who have learned agents often outperform people who know only prompts.",
+        ],
+        say: "Is this one agent doing one job, or several working together across systems?",
+      },
+      {
+        t: "MCP and connecting agents to systems",
+        body: [
+          "The Model Context Protocol (MCP) is an open standard for connecting AI to tools and data. Build a connector once, and any compatible assistant can use it.",
+          "It began at Anthropic and is now supported across the major vendors. Agent-to-agent protocols such as A2A cover how agents from different vendors talk to each other.",
+          "For clients, this is integration work: wrapping internal systems so agents can use them safely. Integration engineers with API experience fit well.",
+        ],
+        say: "Which internal systems does the agent need to reach, and do those have APIs today?",
+      },
+      {
+        t: "Keeping agents safe and useful",
+        body: [
+          "Human in the loop means a person approves certain actions, such as sending money or emailing a customer. Guardrails are automatic checks on inputs and outputs.",
+          "Observability means recording every step an agent takes so failures can be traced. Without it nobody can explain what the agent did.",
+          "Production agent teams need evaluation engineers and platform skills as much as builders. That is where projects are short-staffed.",
+        ],
+        say: "When an agent gets something wrong, how would your team find out and trace why?",
+      },
+    ],
+    quiz: [
+      { q: "What separates an agent from a chatbot?", a: ["Agents are always voice-based", "Agents use tools in a loop to take actions toward a goal", "Agents never use LLMs", "Agents are cheaper"], c: 1, why: "An agent decides, acts with tools, checks the result and repeats." },
+      { q: "In agent engineering, a harness is:", a: ["A GPU rack", "The software around the model that runs the loop, tools, context and permissions", "A sales methodology", "A data warehouse"], c: 1, why: "The harness turns a model into a working agent. Claude Code and Codex are examples." },
+      { q: "What is MCP?", a: ["A Microsoft certification", "An open standard for connecting AI to tools and data", "A type of GPU", "A pricing model"], c: 1, why: "The Model Context Protocol standardizes how assistants connect to external systems." },
+      { q: "A client wants several specialist agents coordinated across finance systems. Which background transfers best?", a: ["Graphic design", "Backend and distributed systems engineering", "Desktop support", "Copywriting"], c: 1, why: "Orchestration is a distributed systems problem: state, retries, failure handling." },
+      { q: "'Human in the loop' means:", a: ["A person approves or reviews certain agent actions", "People type every response", "The agent is switched off", "Users rate the logo"], c: 0, why: "It is the control point where a person signs off on higher-risk actions." },
+    ],
+  },
+  {
+    id: "security",
+    title: "Security & Governance",
+    blurb: "The risks clients worry about and the people who manage them.",
+    lessons: [
+      {
+        t: "New risks",
+        body: [
+          "Prompt injection: hidden instructions in a document, email or web page that trick the AI into doing something it should not. It tops the OWASP Top 10 for LLM Applications.",
+          "Data leakage: sensitive data pasted into public tools, or an assistant revealing data to the wrong person. Shadow AI is staff using unapproved AI tools.",
+          "Agents add risk because they can act. An agent with access to email and files can be turned against its owner by one poisoned message.",
+        ],
+        say: "Has security reviewed what your AI tools can reach, and what happens if someone feeds one a malicious document?",
+      },
+      {
+        t: "Securing AI systems",
+        body: [
+          "Red teaming is attacking your own AI to find weaknesses before someone else does. Guardrails filter harmful inputs and outputs.",
+          "Least privilege applies to agents too: give each agent only the access its task needs, and treat it as an identity to be managed.",
+          "The talent is hybrid: application security or cloud security people who have learned how LLMs fail. MITRE ATLAS and the OWASP lists are the keywords.",
+        ],
+        say: "Who on the security team owns AI today? Is that a dedicated person or a side job?",
+      },
+      {
+        t: "Governance frameworks",
+        body: [
+          "NIST AI Risk Management Framework: the main US reference, voluntary, organized as govern, map, measure, manage. ISO/IEC 42001: a certifiable management system standard for AI.",
+          "EU AI Act: law that sorts AI uses by risk and puts the heaviest duties on high-risk uses such as hiring, credit and medical decisions. It applies to companies serving the EU. Its deadlines phase in over several years, so check current dates.",
+          "US states and sector regulators add their own rules. Clients in finance, healthcare and HR technology feel this first.",
+        ],
+        say: "Which regulations is your AI program being built to meet? Who is tracking them?",
+      },
+      {
+        t: "What a governance program does",
+        body: [
+          "It keeps an inventory of every AI system, rates each for risk, reviews high-risk ones before launch and monitors them afterward.",
+          "It produces documentation: what the system does, what data it used, how it was tested, who is accountable. It also reviews vendors' AI.",
+          "Roles: AI Governance Lead, AI Risk Analyst, Responsible AI Lead, Model Risk Manager in banks, and privacy counsel. Many come from compliance, privacy or audit.",
+        ],
+        say: "Do you have a list of every AI system in use across the company? Who signs off before a new one goes live?",
+      },
+    ],
+    quiz: [
+      { q: "A hidden line in a PDF tells an assistant to forward the user's files. What is this attack?", a: ["Phishing", "Prompt injection", "SQL injection", "Denial of service"], c: 1, why: "Prompt injection plants instructions in content the AI reads." },
+      { q: "'Shadow AI' refers to:", a: ["Dark mode", "Staff using unapproved AI tools", "A model with no training data", "Backup servers"], c: 1, why: "It is unsanctioned AI use, and a common source of data leakage." },
+      { q: "Which is a certifiable management system standard for AI?", a: ["ISO/IEC 42001", "HTML5", "PL-400", "MCP"], c: 0, why: "ISO/IEC 42001 sets requirements for an AI management system and can be audited." },
+      { q: "Where do most AI governance candidates come from?", a: ["Game design", "Compliance, privacy, risk and audit", "Help desk", "Sales"], c: 1, why: "Governance builds on existing risk and compliance disciplines, plus AI literacy." },
+      { q: "Red teaming an AI system means:", a: ["Rebranding it", "Attacking it deliberately to find weaknesses", "Training it on red images", "Turning it off at night"], c: 1, why: "Red teams probe for failures such as jailbreaks, leakage and unsafe actions." },
+    ],
+  },
+  {
+    id: "lifecycle",
+    title: "Pilot to Production",
+    blurb: "The stages of an AI program and who is needed at each.",
+    lessons: [
+      {
+        t: "Four stages of maturity",
+        body: [
+          "Exploring: leadership interest, a few licenses, no owner. Piloting: several proofs of concept, small team, nothing live.",
+          "Scaling: first systems in production, a platform team forming, governance catching up. Operating: AI is part of normal delivery, with budgets and metrics.",
+          "Place the client on this scale early. It tells you which roles they need now and which come next.",
+        ],
+        say: "Would you say you are exploring, piloting, scaling, or running AI as business as usual?",
+      },
+      {
+        t: "Why pilots stall",
+        body: [
+          "The common causes: poor data, no clear owner, no way to measure quality, security review late in the process, and no plan for adoption.",
+          "Each cause maps to a role. Data: data engineer. Ownership: AI product manager. Quality: evaluation engineer. Security: AI security. Adoption: change lead.",
+          "When a client says the pilot 'did not really go anywhere', ask what stopped it. The answer names the req.",
+        ],
+        say: "What stopped the last pilot from going live?",
+      },
+      {
+        t: "Build, buy, or partner",
+        body: [
+          "Buy: turn on AI in tools they own, such as Copilot or Agentforce. Needs platform specialists, governance and adoption.",
+          "Build: custom applications and agents. Needs AI engineers, data engineers, platform and evaluation. Partner: a consultancy or vendor delivers, and the client needs people who can own it afterward.",
+          "Most clients do all three. Ask about each, because each has its own budget holder.",
+        ],
+        say: "What are you buying off the shelf, what are you building yourselves, and what is a partner delivering?",
+      },
+      {
+        t: "The operating team",
+        body: [
+          "Once AI is live it needs running: monitoring cost and quality, updating prompts and models, handling incidents, retraining users.",
+          "Model versions are retired by vendors on a schedule, so systems need regular migration and re-testing. This is recurring work.",
+          "Contract and managed-team models fit here. A standing pod of AI engineer, evaluator and platform engineer is easier to sell than one-off hires.",
+        ],
+        say: "Who looks after the system after go-live? Is that the same team that built it?",
+      },
+    ],
+    quiz: [
+      { q: "A client has several proofs of concept, a small team and nothing live. Which stage?", a: ["Exploring", "Piloting", "Scaling", "Operating"], c: 1, why: "Proofs of concept without production use is the piloting stage." },
+      { q: "A pilot stalled because nobody could show the answers were accurate. Which role closes that gap?", a: ["Evaluation engineer", "Network administrator", "Scrum master", "UX designer"], c: 0, why: "Evaluation engineers build the tests that measure quality." },
+      { q: "A client is 'turning on Copilot for 8,000 staff'. Which mix fits best?", a: ["Research scientists", "Platform specialists, data governance and adoption leads", "GPU engineers", "Game developers"], c: 1, why: "Buying AI in an existing platform needs configuration, governance and change management." },
+      { q: "Why is running AI recurring work?", a: ["It is not", "Models are retired, prompts drift, costs and quality need monitoring", "Licenses expire daily", "Laws require weekly rebuilds"], c: 1, why: "Live systems need monitoring, migration and re-testing as models and data change." },
+      { q: "What is the best follow-up to 'our pilot did not go anywhere'?", a: ["That is a shame", "What stopped it from going live?", "Do you want resumes?", "Who was the vendor?"], c: 1, why: "The blocker tells you which role is missing." },
+    ],
+  },
+  {
+    id: "client",
+    title: "Client Conversations",
+    blurb: "Discovery, credibility and handling the objections you will hear.",
+    lessons: [
+      {
+        t: "Lead with the business problem",
+        body: [
+          "Clients do not buy AI. They buy shorter handle times, faster claims, fewer manual hours. Start with what they are trying to change.",
+          "Then find the stage, the stack and the blocker. Those three facts turn a vague 'AI person' into a req you can fill.",
+          "You are not expected to be an engineer. You are expected to ask the questions an informed partner would ask.",
+        ],
+        say: "What is the business outcome this is meant to move, and how will you know it worked?",
+      },
+      {
+        t: "The discovery set",
+        body: [
+          "Outcome: what changes if this works? Stage: exploring, piloting, scaling or operating? Stack: which cloud, which data platform, which tools?",
+          "Team: who is on it today and what is missing? Blocker: what has slowed you down? Timeline and budget: is this funded, and by whom?",
+          "Six questions, ten minutes. Write the answers into the req notes so your recruiter can screen against them.",
+        ],
+        say: "Can I ask six quick questions so I send you the right people rather than a stack of resumes?",
+      },
+      {
+        t: "Turn a title into a role",
+        body: [
+          "Titles in AI are unsettled. 'AI engineer', 'ML engineer' and 'prompt engineer' can all mean the same job at different companies.",
+          "Ask what the person will do in the first 90 days, what they will own, and what they must have built before. Those answers define the role.",
+          "Then read it back in plain words. Clients trust a partner who can restate the need more clearly than the job description did.",
+        ],
+        say: "Ninety days in, what has this person shipped?",
+      },
+      {
+        t: "Common objections",
+        body: [
+          "'We will upskill our own people.' Agree, then ask who leads the work while they learn. Offer a contractor who builds and transfers knowledge.",
+          "'We are waiting for the technology to settle.' Data, governance and platform work pays off whichever model wins. Start there.",
+          "'The rate is too high.' Scarcity is real for people with production experience. Compare the rate to the cost of a stalled program, or reshape the role around the must-haves.",
+        ],
+        say: "That makes sense. Who is carrying the work while the team gets up to speed?",
+      },
+      {
+        t: "Be credible and say when you do not know",
+        body: [
+          "Use the right word only when you know what it means. One misused term costs more trust than ten plain questions earn.",
+          "It is fine to say you will check with your technical recruiter. It is not fine to guess at a client's architecture.",
+          "Bring something each time: what similar clients are hiring for, how long searches are taking, which skills are scarce. Market insight is what you are selling.",
+        ],
+        say: "I do not want to guess at that. Let me confirm with our technical team and come back today.",
+      },
+    ],
+    quiz: [
+      { q: "What is the best opening for an AI discovery call?", a: ["Which LLM do you use?", "What business outcome is this meant to move?", "How many resumes do you want?", "Is your budget approved?"], c: 1, why: "Outcome first. It frames everything else and shows you are a partner." },
+      { q: "A client says 'we will just upskill our team'. What is the strongest reply?", a: ["That never works", "Agree, then ask who leads delivery while they learn", "Lower your rate", "End the call"], c: 1, why: "It respects the plan and surfaces the gap you can fill." },
+      { q: "A client asks for a 'prompt engineer'. What should you do?", a: ["Search that title only", "Ask what the person will ship in 90 days and what they will own", "Tell them the title is wrong", "Send a data scientist"], c: 1, why: "Titles vary. The work defines the role." },
+      { q: "You are asked a technical question you cannot answer. What do you do?", a: ["Guess confidently", "Change the subject", "Say you will confirm with your technical team and follow up the same day", "Repeat buzzwords"], c: 2, why: "Honesty protects credibility. Follow through fast." },
+      { q: "'We are waiting for AI to settle.' Which work can you position now?", a: ["Nothing", "Data, governance and platform work that pays off under any model", "A ten-year research lab", "More waiting"], c: 1, why: "Foundational work is model-independent and reduces later risk." },
+    ],
+  },
+  {
+    id: "candidate",
+    title: "Candidate Conversations",
+    blurb: "Screening for real experience and selling the role well.",
+    lessons: [
+      {
+        t: "Production beats projects",
+        body: [
+          "Anyone can build a demo in a weekend. The scarce experience is shipping something that real users depend on.",
+          "Ask what it was, who used it, how many users, how long it ran, and what broke. Strong candidates answer with specifics and numbers.",
+          "Weak answers stay at the level of tool names. Listen for outcomes and trade-offs.",
+        ],
+        say: "Tell me about an AI system you built that real users relied on. Who used it and what happened after launch?",
+      },
+      {
+        t: "Four screening questions that work",
+        body: [
+          "How did you know it was working? Listen for evals, test sets and metrics. How did you handle wrong answers? Listen for guardrails, retrieval fixes, human review.",
+          "What did it cost to run and how did you bring that down? Listen for token usage, caching, model choice. What would you do differently? Listen for honest lessons.",
+          "You do not need to judge the technical detail. You need to hear whether the answers are concrete.",
+        ],
+        say: "How did you know the system was giving good answers?",
+      },
+      {
+        t: "Red flags",
+        body: [
+          "Claims to have 'trained an LLM' at a company that could not have afforded it. Usually they called an API or fine-tuned a small model. Ask what exactly they did.",
+          "A long list of tools with no outcomes. Every project described as 'we'. Only coursework and personal projects presented as work experience.",
+          "No view on what went wrong. Real projects have scars, and real builders talk about them.",
+        ],
+        say: "On that project, which parts did you build yourself?",
+      },
+      {
+        t: "What AI candidates want",
+        body: [
+          "They ask whether the work is real. Is it funded? Is there an executive sponsor? Will it reach production?",
+          "They ask about the environment: access to data, choice of tools and models, budget for compute, and whether a coding assistant is allowed.",
+          "Get these answers from the client before you call candidates. The best ones have options and will pass on a vague role.",
+        ],
+        say: "This one is funded through next year, reports to the CTO, and has two systems live already.",
+      },
+      {
+        t: "Adjacent talent",
+        body: [
+          "Production AI experience is scarce. Strong software engineers, data engineers and security engineers who have added AI skills fill many reqs well.",
+          "Look for proof of the adjacent move: a shipped internal tool, an agent that automates part of their own job, contributions to an AI project.",
+          "Present them honestly to the client: strong fundamentals, AI experience of this kind, gap here. Clients accept a clear trade-off more readily than an oversold resume.",
+        ],
+        say: "They have eight years of backend work and shipped two agent projects this year. The gap is evaluation, and here is how they plan to close it.",
+      },
+    ],
+    quiz: [
+      { q: "Which answer most suggests real production experience?", a: ["I am passionate about AI", "I have used every framework", "It served 4,000 agents, we tracked accuracy weekly, and cut cost per ticket by a third", "I completed five courses"], c: 2, why: "Users, measurement and outcomes are the signals of production work." },
+      { q: "A candidate at a 30-person firm says they 'trained an LLM from scratch'. What do you do?", a: ["Submit immediately", "Ask what exactly they did: API use, fine-tuning or training", "Reject immediately", "Ignore it"], c: 1, why: "The claim is unlikely as stated. Clarify the actual work." },
+      { q: "Which question best tests whether a candidate can run AI in production?", a: ["What is your favorite model?", "How did you know it was working?", "Do you like Python?", "Have you used ChatGPT?"], c: 1, why: "It reveals whether they measured quality with evals and metrics." },
+      { q: "What should you learn from the client before calling top AI candidates?", a: ["Office snack options", "Funding, sponsor, path to production, data access and tools", "The CEO's hometown", "Nothing"], c: 1, why: "Strong candidates screen the role. Vague answers lose them." },
+      { q: "A backend engineer has shipped two internal agent tools but has no AI title. How do you present them?", a: ["Hide the gap", "State strengths, the AI work done and the gap clearly", "Change their title on the resume", "Do not present them"], c: 1, why: "An honest trade-off builds trust and often wins the interview." },
+    ],
+  },
+];
+
+/* Scouting reports: one per role. `scarcity` is a 1–5 directional read on how
+   hard the role is to fill, not a market statistic. */
+
+const ROLE_GROUPS = ["Build", "Data", "Platform", "Govern & Secure", "Automate", "Lead & Adopt"];
+
+const ROLES = [
+  {
+    id: "ai-eng", name: "AI Engineer", group: "Build", scarcity: 4,
+    aka: "Applied AI Engineer, GenAI Engineer, LLM Engineer",
+    what: "Builds applications and agents on top of existing models. A software engineer who works with model APIs, retrieval, tools and evals.",
+    need: "The client wants an assistant, a document workflow or an agent built on their own data.",
+    skills: ["Python or TypeScript", "RAG", "Agents and tool use", "Evals", "Model APIs"],
+    screen: ["What did you ship, and who used it?", "How did you measure answer quality?", "How did you reduce cost or latency?"],
+    confuse: "ML Engineer. Ask whether the job trains models or builds with existing ones.",
+  },
+  {
+    id: "fde", name: "Forward Deployed Engineer", group: "Build", scarcity: 5,
+    aka: "FDE, AI Solutions Engineer, Embedded AI Engineer",
+    what: "Sits with a customer or business unit, finds the real problem and ships working software in their environment. Engineer and consultant in one.",
+    need: "A vendor needs customer deployments delivered, or an enterprise wants engineers embedded in the business rather than taking tickets.",
+    skills: ["Full-stack engineering", "Discovery with stakeholders", "Fast prototyping", "Integration", "Clear communication"],
+    screen: ["Tell me about a time you built on site with a customer.", "How did you decide what to build first?", "What did you do when requirements changed mid-build?"],
+    confuse: "Sales Engineer. An FDE writes production code. A sales engineer demos and supports the sale.",
+  },
+  {
+    id: "ml-eng", name: "ML Engineer", group: "Build", scarcity: 4,
+    aka: "Machine Learning Engineer",
+    what: "Trains, tunes and deploys machine learning models, and builds the systems that serve them at scale.",
+    need: "The client trains its own models: forecasting, fraud, recommendations, computer vision or fine-tuned LLMs.",
+    skills: ["Python", "PyTorch", "Model training", "Feature pipelines", "Model serving"],
+    screen: ["Which models have you trained and deployed yourself?", "How did you monitor them after launch?", "What was the data volume?"],
+    confuse: "AI Engineer and Data Scientist. ML engineers sit between them, with stronger production engineering.",
+  },
+  {
+    id: "ds", name: "Data Scientist", group: "Build", scarcity: 3,
+    aka: "Applied Scientist, Decision Scientist",
+    what: "Analyzes data, runs experiments and builds predictive models to answer business questions.",
+    need: "The client wants forecasts, segmentation, experiment analysis or a measured view of whether AI changed an outcome.",
+    skills: ["Statistics", "Python or R", "SQL", "Experiment design", "Modeling"],
+    screen: ["Which decision did your analysis change?", "How did you validate the model?", "Who used the result?"],
+    confuse: "Data Analyst. Scientists build models and experiments. Analysts report and explain.",
+  },
+  {
+    id: "agent-dev", name: "Agent Developer", group: "Build", scarcity: 4,
+    aka: "Agentic AI Engineer, AI Automation Engineer",
+    what: "Designs and builds agents: the tools they use, the harness that runs them, and the checks that keep them on task.",
+    need: "The client wants work done end to end by software, such as triaging tickets, reconciling invoices or researching accounts.",
+    skills: ["Agent frameworks", "Tool and API design", "MCP", "Orchestration", "Evals and tracing"],
+    screen: ["What could your agent do without approval?", "How did you test it?", "Describe a failure and how you traced it."],
+    confuse: "Chatbot Developer. Agents take actions across systems. Chatbots mostly answer.",
+  },
+  {
+    id: "context-eng", name: "Prompt / Context Engineer", group: "Build", scarcity: 2,
+    aka: "Prompt Engineer, AI Content Designer",
+    what: "Designs the instructions, examples and information a model receives so it behaves reliably. Now usually part of an AI engineer's job.",
+    need: "The client has a working system with inconsistent outputs, or a large library of prompts to maintain.",
+    skills: ["Prompt design", "Context management", "Eval writing", "Domain knowledge", "Clear writing"],
+    screen: ["How did you test that a prompt change was an improvement?", "Show me a before and after.", "How do you manage prompt versions?"],
+    confuse: "AI Engineer. As a standalone title it is fading. Ask what the person will ship.",
+  },
+  {
+    id: "conv-design", name: "Conversation Designer", group: "Build", scarcity: 2,
+    aka: "Conversational AI Designer, Voice UX Designer",
+    what: "Designs how an assistant or voice agent talks: tone, flows, hand-offs to people and recovery when it misunderstands.",
+    need: "The client is launching a customer-facing chat or voice agent in a contact center.",
+    skills: ["Dialogue design", "UX writing", "Contact center platforms", "User testing"],
+    screen: ["Which assistant did you design and what was the containment rate?", "How did you handle hand-off to a person?"],
+    confuse: "UX Designer. Conversation design is language-first.",
+  },
+  {
+    id: "data-eng", name: "Data Engineer", group: "Data", scarcity: 3,
+    aka: "Data Platform Engineer, ETL Developer",
+    what: "Builds and runs the pipelines that collect, clean and deliver data to analytics and AI systems.",
+    need: "The AI gives poor answers because data is scattered, stale or duplicated. Also any Databricks, Snowflake or Fabric build.",
+    skills: ["SQL", "Python", "Spark", "dbt", "Airflow", "Databricks or Snowflake"],
+    screen: ["What volume of data did your pipelines handle?", "How did you catch bad data?", "Which platform, and which parts did you own?"],
+    confuse: "Data Analyst. Engineers build the plumbing. Analysts use what comes out.",
+  },
+  {
+    id: "analytics-eng", name: "Analytics Engineer", group: "Data", scarcity: 2,
+    aka: "BI Engineer",
+    what: "Turns raw data into clean, documented tables and metrics that reports and AI assistants can trust.",
+    need: "The client wants staff to ask questions of their data in plain language, and the numbers need a single definition.",
+    skills: ["SQL", "dbt", "Data modeling", "Semantic layers", "Power BI or Tableau"],
+    screen: ["How did you define and document metrics?", "How many models did you maintain?"],
+    confuse: "Data Engineer. Analytics engineers work closer to the business definitions.",
+  },
+  {
+    id: "data-arch", name: "Data Architect", group: "Data", scarcity: 3,
+    aka: "Enterprise Data Architect",
+    what: "Designs how data is stored, shared, secured and governed across the company.",
+    need: "The client is choosing or consolidating a data platform ahead of AI work.",
+    skills: ["Platform design", "Data modeling", "Governance", "Cloud data services"],
+    screen: ["Which platform decisions did you own?", "How did you handle access and lineage?"],
+    confuse: "AI Architect. Data architects own the data estate. AI architects own the AI system design.",
+  },
+  {
+    id: "data-steward", name: "Data Governance Analyst", group: "Data", scarcity: 2,
+    aka: "Data Steward, Data Quality Analyst",
+    what: "Owns data definitions, quality rules, cataloging and access reviews.",
+    need: "A Copilot or search rollout exposed files people should not see, or nobody trusts the numbers.",
+    skills: ["Data catalogs", "Purview or Collibra", "Access reviews", "Data quality rules"],
+    screen: ["Which catalog did you run?", "How did you fix an access problem at scale?"],
+    confuse: "AI Governance Lead. This role governs data. That role governs AI systems.",
+  },
+  {
+    id: "mlops", name: "MLOps / LLMOps Engineer", group: "Platform", scarcity: 4,
+    aka: "ML Platform Engineer, AI Ops Engineer",
+    what: "Gets models and AI applications deployed, versioned, monitored and updated safely.",
+    need: "The client has pilots that cannot reach production, or live systems nobody is monitoring.",
+    skills: ["CI/CD", "Kubernetes", "MLflow", "Monitoring and tracing", "Cloud AI services"],
+    screen: ["How did you deploy and roll back model changes?", "What did you monitor in production?", "How did you handle a model being retired?"],
+    confuse: "DevOps Engineer. The base is shared, with added model, data and evaluation concerns.",
+  },
+  {
+    id: "ai-platform", name: "AI Platform Engineer", group: "Platform", scarcity: 4,
+    aka: "AI Infrastructure Engineer, GPU Platform Engineer",
+    what: "Runs the shared infrastructure teams build on: model gateways, GPU clusters, vector stores and cost controls.",
+    need: "Several teams are building AI separately, costs are rising, or the client is self-hosting models.",
+    skills: ["Kubernetes", "GPU scheduling", "Model serving", "API gateways", "FinOps"],
+    screen: ["How many teams used your platform?", "How did you control cost?", "Have you served open-weight models?"],
+    confuse: "Cloud Engineer. Similar base, with GPU and model-serving depth.",
+  },
+  {
+    id: "ai-arch", name: "AI Architect", group: "Platform", scarcity: 5,
+    aka: "AI Solutions Architect, GenAI Architect",
+    what: "Designs the end-to-end AI system: which models, which platform, how data flows, how it is secured and what it costs.",
+    need: "The client is moving from scattered pilots to a standard way of building, or picking platforms.",
+    skills: ["System design", "Cloud AI platforms", "Security and cost design", "Stakeholder communication"],
+    screen: ["Walk me through an architecture you designed that went live.", "Which trade-offs did you make and why?"],
+    confuse: "Enterprise Architect. AI architects need hands-on experience of AI systems in production.",
+  },
+  {
+    id: "eval-eng", name: "AI Evaluation Engineer", group: "Platform", scarcity: 4,
+    aka: "AI QA Engineer, AI Test Engineer, Eval Engineer",
+    what: "Builds the test sets, scoring and automated checks that show whether an AI system is accurate, safe and improving.",
+    need: "Nobody can say how accurate the system is, or every release is a guess.",
+    skills: ["Eval design", "Test automation", "Python", "Statistics", "Tracing tools"],
+    screen: ["How did you build your test set?", "How did you score open-ended answers?", "What did your evals catch before release?"],
+    confuse: "QA Tester. AI outputs vary, so testing needs scoring methods rather than pass or fail scripts.",
+  },
+  {
+    id: "integration", name: "AI Integration Engineer", group: "Platform", scarcity: 3,
+    aka: "Integration Developer, API Engineer",
+    what: "Connects AI systems to the applications they need: builds APIs, connectors and MCP servers, and handles identity and permissions.",
+    need: "The agent works in a demo and cannot reach the CRM, ERP or ticketing system.",
+    skills: ["APIs", "MCP", "Identity and access", "iPaaS tools", "Enterprise applications"],
+    screen: ["Which systems did you connect?", "How did you handle permissions for the agent?"],
+    confuse: "AI Engineer. Integration engineers specialize in the connections.",
+  },
+  {
+    id: "ai-gov", name: "AI Governance Lead", group: "Govern & Secure", scarcity: 4,
+    aka: "Responsible AI Lead, AI Risk Manager, AI Compliance Lead",
+    what: "Sets AI policy, keeps the inventory of AI systems, runs risk reviews and tracks regulation.",
+    need: "The board or a regulator is asking how AI is controlled, or the client sells into the EU or regulated sectors.",
+    skills: ["NIST AI RMF", "ISO/IEC 42001", "EU AI Act", "Risk assessment", "Policy writing"],
+    screen: ["Which framework did you implement?", "How did you inventory AI systems?", "Describe a use case you stopped or changed."],
+    confuse: "Data Governance. AI governance covers the behavior and risk of AI systems as well as their data.",
+  },
+  {
+    id: "ai-sec", name: "AI Security Engineer", group: "Govern & Secure", scarcity: 5,
+    aka: "AI Red Teamer, LLM Security Engineer",
+    what: "Finds and fixes the ways AI systems can be attacked: prompt injection, data leakage, unsafe agent actions.",
+    need: "Agents are getting access to real systems, or security has blocked a launch.",
+    skills: ["Application security", "Red teaming", "OWASP LLM Top 10", "MITRE ATLAS", "Identity for agents"],
+    screen: ["Which AI systems have you attacked or defended?", "How would you limit what an agent can do?"],
+    confuse: "Security Analyst. This role needs working knowledge of how LLMs and agents fail.",
+  },
+  {
+    id: "model-risk", name: "Model Risk Analyst", group: "Govern & Secure", scarcity: 3,
+    aka: "Model Validator, Model Risk Manager",
+    what: "Independently tests and documents models before and after launch. Long established in banking and insurance.",
+    need: "A financial services client must validate AI under model risk rules.",
+    skills: ["Model validation", "Statistics", "Documentation", "Regulatory knowledge"],
+    screen: ["Which model types have you validated?", "How did you validate a generative AI use case?"],
+    confuse: "Data Scientist. Validators test other people's models and must be independent.",
+  },
+  {
+    id: "ai-trainer-model", name: "AI Trainer (model)", group: "Govern & Secure", scarcity: 2,
+    aka: "AI Data Specialist, Annotator, Subject Matter Evaluator",
+    what: "Improves models by labeling data, writing example answers and rating outputs. Increasingly a subject expert such as a nurse, lawyer or engineer.",
+    need: "The client is fine-tuning or evaluating a model in a specialist domain and needs expert judgment at volume.",
+    skills: ["Domain expertise", "Attention to detail", "Rubric-based rating", "Clear writing"],
+    screen: ["Which domain do you know deeply?", "Have you rated to a rubric? How was your consistency checked?"],
+    confuse: "AI Enablement Trainer. This role trains the model. That one trains the people.",
+  },
+  {
+    id: "rpa-dev", name: "Automation Developer", group: "Automate", scarcity: 2,
+    aka: "RPA Developer, Intelligent Automation Developer",
+    what: "Builds software bots and automated workflows, now often with AI steps for reading documents and handling exceptions.",
+    need: "The client has repetitive back-office work in finance, HR or operations, or an aging bot estate.",
+    skills: ["UiPath", "Automation Anywhere", "Power Automate", "Process mapping", "Document AI"],
+    screen: ["How many automations are live and what hours did they save?", "How do you handle exceptions?"],
+    confuse: "Agent Developer. RPA follows fixed steps. Agents decide their steps.",
+  },
+  {
+    id: "lowcode-dev", name: "Low-Code Developer", group: "Automate", scarcity: 2,
+    aka: "Power Platform Developer, Copilot Studio Developer",
+    what: "Builds apps, workflows and agents on low-code platforms such as Power Platform, Mendix, OutSystems or ServiceNow.",
+    need: "The business wants tools quickly and the client already licenses the platform.",
+    skills: ["Power Apps", "Power Automate", "Copilot Studio", "Dataverse", "Platform certifications"],
+    screen: ["Which apps or agents are in production and how many users?", "How do you manage environments and releases?"],
+    confuse: "Citizen Developer. Professionals handle security, integration and scale.",
+  },
+  {
+    id: "coe-lead", name: "Automation CoE Lead", group: "Automate", scarcity: 3,
+    aka: "Center of Excellence Lead, Platform Owner",
+    what: "Runs the team that sets standards, reviews builds and supports business users building their own apps and agents.",
+    need: "Business users have built many apps and automations with no oversight.",
+    skills: ["Platform governance", "Portfolio management", "Training", "Stakeholder management"],
+    screen: ["How large was the estate you governed?", "Which rules did you put in place and how were they enforced?"],
+    confuse: "Project Manager. A CoE lead owns a standing capability.",
+  },
+  {
+    id: "ba-process", name: "Process Analyst", group: "Automate", scarcity: 1,
+    aka: "Business Analyst, Process Mining Analyst",
+    what: "Maps how work is done today, finds the steps worth automating and writes the business case.",
+    need: "The client wants to use AI and cannot say where it will pay back.",
+    skills: ["Process mapping", "Process mining", "Requirements", "Business cases"],
+    screen: ["Which process did you redesign and what was saved?", "How did you choose what to automate?"],
+    confuse: "Project Manager. Analysts define the work. Managers deliver it.",
+  },
+  {
+    id: "ai-pm", name: "AI Product Manager", group: "Lead & Adopt", scarcity: 4,
+    aka: "AI Product Owner, GenAI Product Lead",
+    what: "Decides which AI use cases to build, defines success and owns the product through launch and beyond.",
+    need: "There are many ideas and no owner, or pilots have no success measure.",
+    skills: ["Product management", "AI literacy", "Metrics", "Prioritization", "Stakeholder management"],
+    screen: ["Which AI product did you launch and what did it change?", "How did you define good enough?"],
+    confuse: "Project Manager. Product managers own outcomes. Project managers own schedules.",
+  },
+  {
+    id: "adoption", name: "AI Adoption Lead", group: "Lead & Adopt", scarcity: 3,
+    aka: "AI Change Manager, AI Enablement Lead",
+    what: "Gets people using AI tools well: communication, champions, role-based guidance and usage tracking.",
+    need: "Licenses were bought and usage is low.",
+    skills: ["Change management", "Communications", "Training design", "Usage analytics"],
+    screen: ["Which rollout did you lead and what was adoption after 90 days?", "What did you do for teams that resisted?"],
+    confuse: "Trainer. Adoption leads own the whole change, including leadership and measurement.",
+  },
+  {
+    id: "ai-trainer-people", name: "AI Enablement Trainer", group: "Lead & Adopt", scarcity: 2,
+    aka: "AI Trainer (workforce), Copilot Trainer, AI Literacy Instructor",
+    what: "Teaches employees to use AI tools in their own jobs, with hands-on sessions built around real tasks.",
+    need: "A Copilot or assistant rollout is under way, or AI literacy training is required by policy.",
+    skills: ["Instruction", "Curriculum design", "Hands-on tool knowledge", "Role-specific use cases"],
+    screen: ["Which tools have you taught, and to which roles?", "How did you measure whether it stuck?"],
+    confuse: "AI Trainer (model). Always ask the client which one they mean.",
+  },
+  {
+    id: "caio", name: "Head of AI", group: "Lead & Adopt", scarcity: 5,
+    aka: "Chief AI Officer, VP of AI, AI Program Director",
+    what: "Owns AI strategy, budget, the operating model and results across the company.",
+    need: "AI efforts are spread across departments with no single owner or plan.",
+    skills: ["Strategy", "Executive leadership", "Delivery track record", "Risk and governance"],
+    screen: ["What did you take from pilot to scale?", "How was your budget set and measured?"],
+    confuse: "CIO or CDO. A Head of AI is often a peer or report with a narrower, delivery-focused brief.",
+  },
+];
+
+/* Who the client needs at each phase of an AI program. */
+const LIFECYCLE = [
+  { phase: "Choose", goal: "Pick use cases worth doing", roles: ["caio", "ai-pm", "ba-process", "ai-arch"] },
+  { phase: "Prepare", goal: "Get the data ready", roles: ["data-eng", "data-arch", "analytics-eng", "data-steward"] },
+  { phase: "Build", goal: "Ship a working system", roles: ["ai-eng", "fde", "agent-dev", "lowcode-dev", "ml-eng"] },
+  { phase: "Prove", goal: "Test, secure and approve it", roles: ["eval-eng", "ai-sec", "ai-gov", "model-risk"] },
+  { phase: "Connect", goal: "Deploy and integrate", roles: ["mlops", "ai-platform", "integration"] },
+  { phase: "Adopt", goal: "Get people using it", roles: ["adoption", "ai-trainer-people", "conv-design"] },
+  { phase: "Run", goal: "Operate and improve", roles: ["mlops", "eval-eng", "ai-trainer-model", "coe-lead"] },
+];
+
+/* Field guide reference data: the platform map, the glossary and talk tracks.
+   The glossary also feeds the flash cards and the speed round. */
+
+const PLATFORMS = [
+  { cat: "Model labs", items: [
+    ["OpenAI", "GPT models, ChatGPT, Codex and an agent SDK.", "ai-eng"],
+    ["Anthropic", "Claude models, Claude Code and the origin of MCP.", "ai-eng"],
+    ["Google", "Gemini models, offered through Vertex AI and Workspace.", "ai-eng"],
+    ["Meta", "Llama open-weight models that clients can host themselves.", "ai-platform"],
+    ["Mistral, Cohere, xAI", "Other model makers. Mistral and Cohere are common where data residency matters.", "ai-eng"],
+    ["Hugging Face", "The hub where open models and datasets are shared.", "ml-eng"],
+  ]},
+  { cat: "Cloud AI platforms", items: [
+    ["Microsoft Foundry", "Azure's AI platform (formerly Azure AI Foundry), including Azure OpenAI.", "ai-eng"],
+    ["Amazon Bedrock", "AWS access to many models, plus agents and guardrails.", "ai-eng"],
+    ["Amazon SageMaker", "AWS service for training and hosting ML models.", "ml-eng"],
+    ["Google Vertex AI", "Google Cloud's platform for models, ML and agents.", "ai-eng"],
+    ["NVIDIA", "The GPUs and software most AI runs on.", "ai-platform"],
+  ]},
+  { cat: "Data platforms", items: [
+    ["Databricks", "Lakehouse for data engineering, ML and AI. Unity Catalog for governance.", "data-eng"],
+    ["Snowflake", "Cloud data platform with built-in AI features (Cortex).", "data-eng"],
+    ["Microsoft Fabric", "Microsoft's combined data and analytics platform, with Power BI.", "data-eng"],
+    ["Google BigQuery", "Google Cloud's data warehouse.", "data-eng"],
+    ["dbt, Airflow, Fivetran, Kafka", "Tools for transforming, scheduling, loading and streaming data.", "data-eng"],
+    ["Pinecone, Weaviate, Qdrant, pgvector", "Vector databases used for retrieval.", "ai-eng"],
+    ["Purview, Collibra, Unity Catalog", "Data catalog and governance tools.", "data-steward"],
+  ]},
+  { cat: "AI in business apps", items: [
+    ["Microsoft 365 Copilot", "Assistant across Word, Excel, Outlook and Teams.", "adoption"],
+    ["Salesforce Agentforce", "Agents for sales and service inside Salesforce.", "lowcode-dev"],
+    ["ServiceNow AI Agents", "Agents for IT, HR and service workflows.", "lowcode-dev"],
+    ["Workday, SAP Joule", "Assistants and agents inside HR, finance and ERP suites.", "integration"],
+    ["Gemini Enterprise", "Google's workplace agent platform.", "adoption"],
+    ["Glean", "Enterprise search and assistant across company apps.", "integration"],
+  ]},
+  { cat: "Agent and app frameworks", items: [
+    ["LangChain, LangGraph", "Widely used frameworks for LLM apps and stateful agents.", "agent-dev"],
+    ["LlamaIndex", "Framework focused on retrieval over documents.", "ai-eng"],
+    ["CrewAI", "Framework for teams of role-based agents.", "agent-dev"],
+    ["Microsoft Agent Framework", "Microsoft's agent toolkit, successor to AutoGen and Semantic Kernel.", "agent-dev"],
+    ["Vendor agent SDKs", "Agent toolkits from OpenAI, Anthropic and Google.", "agent-dev"],
+    ["MCP", "Open standard for connecting assistants to tools and data.", "integration"],
+  ]},
+  { cat: "Coding assistants", items: [
+    ["GitHub Copilot", "Coding assistant built into GitHub and popular editors.", "ai-eng"],
+    ["Cursor", "AI-first code editor.", "ai-eng"],
+    ["Claude Code, OpenAI Codex", "Coding agents that work across a whole codebase.", "ai-eng"],
+    ["Lovable, Bolt, Replit, v0", "App builders that generate software from a description.", "lowcode-dev"],
+  ]},
+  { cat: "Low-code and automation", items: [
+    ["Power Platform", "Power Apps, Power Automate, Power BI and Copilot Studio.", "lowcode-dev"],
+    ["Copilot Studio", "Microsoft's builder for custom agents.", "lowcode-dev"],
+    ["UiPath, Automation Anywhere", "RPA platforms that now include AI agents.", "rpa-dev"],
+    ["Zapier, Make, n8n, Workato", "Workflow tools that connect apps, with AI steps.", "rpa-dev"],
+    ["Mendix, OutSystems, Appian", "Enterprise low-code application platforms.", "lowcode-dev"],
+  ]},
+  { cat: "Operate, evaluate, govern", items: [
+    ["MLflow, Weights & Biases", "Track experiments and manage model versions.", "mlops"],
+    ["LangSmith, Langfuse, Arize, Braintrust", "Trace, evaluate and monitor LLM apps and agents.", "eval-eng"],
+    ["Kubernetes, vLLM, Ollama", "Run and serve models on your own infrastructure.", "ai-platform"],
+    ["Credo AI, OneTrust, watsonx.governance", "AI governance and risk management platforms.", "ai-gov"],
+    ["OWASP LLM Top 10, MITRE ATLAS", "Reference lists of AI attacks and risks.", "ai-sec"],
+  ]},
+];
+
+const GLOSSARY = [
+  ["LLM", "A large language model. Predicts the next piece of text. The engine behind generative AI."],
+  ["Token", "A fragment of text, roughly part of a word. Models read and bill by tokens."],
+  ["Context window", "How much text a model can consider at once."],
+  ["Prompt", "The instructions and information given to a model."],
+  ["Context engineering", "Deciding what information a model sees at each step so it behaves reliably."],
+  ["RAG", "Retrieval-augmented generation. Find relevant documents, then give them to the model with the question."],
+  ["Embedding", "A list of numbers that captures the meaning of text so it can be searched by similarity."],
+  ["Vector database", "A store for embeddings that finds content by meaning."],
+  ["Fine-tuning", "Further training a model on your own examples to change its behavior."],
+  ["Hallucination", "A confident answer that is wrong."],
+  ["Eval", "A repeatable test that scores an AI system against known cases."],
+  ["Inference", "Running a trained model to get an output."],
+  ["Latency", "How long the system takes to respond."],
+  ["Multimodal", "A model that handles more than text, such as images, audio or video."],
+  ["Open-weight model", "A model you can download and run yourself."],
+  ["Agent", "A model given a goal and tools that works in a loop to take actions."],
+  ["Tool use", "A model calling software functions such as search, code or an API."],
+  ["Harness", "The software around a model that runs the agent loop, tools, context and permissions."],
+  ["Orchestration", "Coordinating multiple steps, tools or agents to complete a larger job."],
+  ["Multi-agent system", "Several agents with different jobs working together."],
+  ["MCP", "Model Context Protocol. An open standard for connecting AI to tools and data."],
+  ["A2A", "Agent-to-agent protocol. A standard for agents from different vendors to communicate."],
+  ["Human in the loop", "A person reviews or approves certain AI actions."],
+  ["Guardrails", "Automatic checks that block unsafe inputs or outputs."],
+  ["Observability", "Recording each step a system takes so problems can be traced."],
+  ["Prompt injection", "Hidden instructions in content that trick an AI into misbehaving."],
+  ["Jailbreak", "A prompt crafted to make a model ignore its safety rules."],
+  ["Red teaming", "Attacking your own system to find weaknesses."],
+  ["Shadow AI", "Staff using AI tools the company has not approved."],
+  ["Data leakage", "Sensitive data reaching a tool or person it should not."],
+  ["NIST AI RMF", "The US framework for managing AI risk: govern, map, measure, manage."],
+  ["ISO/IEC 42001", "A certifiable standard for an AI management system."],
+  ["EU AI Act", "European law that regulates AI by level of risk."],
+  ["Model risk management", "Independent testing and oversight of models, standard in banking."],
+  ["MLOps", "The practice of deploying, monitoring and updating ML models reliably."],
+  ["LLMOps", "MLOps for LLM applications: prompts, evals, tracing and cost."],
+  ["GPU", "The chip used to train and run AI models."],
+  ["Model gateway", "A shared entry point that routes, logs and limits calls to models."],
+  ["Data pipeline", "Automated steps that move and clean data."],
+  ["ETL / ELT", "Extract, transform, load. The steps of moving data into a platform."],
+  ["Lakehouse", "A data platform combining raw file storage with warehouse-style tables."],
+  ["Data governance", "Rules for who can use which data, where it came from and how good it is."],
+  ["Semantic layer", "Shared business definitions of metrics that reports and AI both use."],
+  ["RPA", "Robotic process automation. Bots that perform screen-based tasks."],
+  ["Low-code", "Building software mostly with visual tools and a little scripting."],
+  ["Citizen developer", "A business user who builds their own apps or automations."],
+  ["CoE", "Center of excellence. The team that sets standards and supports builders."],
+  ["Copilot", "An assistant embedded in software a person already uses."],
+  ["Vibe coding", "Building software by describing it to an AI and accepting what it writes."],
+  ["Forward deployed engineer", "An engineer embedded with a customer who builds in their environment."],
+  ["Proof of concept", "A small build to show an idea can work. Not production."],
+  ["Production", "Live, used by real users, with support and monitoring."],
+];
+
+const TALK_TRACKS = {
+  discovery: [
+    ["Outcome", "What business outcome is this meant to move, and how will you know it worked?"],
+    ["Stage", "Are you exploring, piloting, scaling, or running AI as business as usual?"],
+    ["Stack", "Which cloud and data platform is this on? Is that fixed?"],
+    ["Build or buy", "What are you buying off the shelf, building yourselves, and handing to a partner?"],
+    ["Team", "Who is on the team today, and what is missing?"],
+    ["Blocker", "What stopped the last pilot from going live?"],
+    ["Data", "Is the data this needs clean, current and access-controlled?"],
+    ["Risk", "Who signs off on security and compliance before launch?"],
+    ["Adoption", "Who makes sure people use it once it is live?"],
+    ["Role", "Ninety days in, what has this person shipped?"],
+    ["Funding", "Is this funded, by whom, and through when?"],
+  ],
+  objections: [
+    ["We will upskill our own people.", "Good plan. Who leads delivery while they learn? A contractor can build and transfer knowledge as they go."],
+    ["We are waiting for the technology to settle.", "The models will keep changing. Data, governance and platform work pays off whichever one wins, so that is a safe place to start."],
+    ["Your rate is too high.", "People with production experience are scarce. Shall we look at which requirements are essential and reshape the role around those?"],
+    ["We just need a prompt engineer.", "Happy to help. What will they ship in the first 90 days? That often points to an AI engineer or an adoption lead."],
+    ["Our consulting partner handles AI.", "That works for delivery. Who owns and runs it when they leave? We can place the people who take it over."],
+    ["We tried AI and it did not work.", "What stopped it? In most cases it is data, ownership or testing, and each has a role that fixes it."],
+    ["AI will replace these roles anyway.", "It is changing them. Teams still need people who can direct, check and run AI systems, and those are the hires we are seeing."],
+    ["We do not have budget for a full team.", "Start with the one role that removes your biggest blocker, on contract, and grow from the result."],
+  ],
+  candidate: [
+    ["Proof", "Tell me about an AI system you built that real users relied on."],
+    ["Ownership", "Which parts did you build yourself?"],
+    ["Quality", "How did you know it was working?"],
+    ["Failure", "What went wrong, and what did you change?"],
+    ["Cost", "What did it cost to run, and how did you bring that down?"],
+    ["Scale", "How many users, how much data, how long in production?"],
+    ["Stack", "Which cloud, data platform and frameworks, and why those?"],
+    ["Safety", "What could the system do without a person approving it?"],
+    ["Motivation", "What would make your next role better than this one?"],
+  ],
+};
+
+/* Game content: role-matching scenarios, resume claims to judge, and the
+   scripted conversations for the call simulator. */
+
+/* A client says something; pick the role. `opts` are role ids, first is right
+   (the engine shuffles them). */
+const SCOUT = [
+  { say: "Our support assistant keeps answering from policies we retired last year.", opts: ["data-eng", "ai-arch", "caio", "conv-design"], why: "Stale source data is a pipeline and data quality problem." },
+  { say: "We bought 5,000 Copilot seats and maybe a tenth of people use it.", opts: ["adoption", "ml-eng", "ai-sec", "data-arch"], why: "Low usage after purchase is a change and adoption gap." },
+  { say: "We sell an AI product and need engineers on site with our biggest customers to get it working in their environment.", opts: ["fde", "ds", "coe-lead", "model-risk"], why: "Embedded, customer-facing engineering is the forward deployed engineer role." },
+  { say: "The board asked for a list of every AI system we run and how each is controlled. We have nothing.", opts: ["ai-gov", "ai-eng", "rpa-dev", "analytics-eng"], why: "Inventory, policy and risk review belong to AI governance." },
+  { say: "We have seven proofs of concept and cannot get one deployed and monitored.", opts: ["mlops", "context-eng", "ba-process", "ai-trainer-people"], why: "Deployment and monitoring is MLOps or LLMOps work." },
+  { say: "We want software that reads incoming invoices, matches them to POs and posts them, with a person approving exceptions.", opts: ["agent-dev", "ds", "data-steward", "caio"], why: "An end-to-end workflow with tools and approvals is agent development." },
+  { say: "Security will not let our agent touch email until someone proves it cannot be tricked.", opts: ["ai-sec", "lowcode-dev", "analytics-eng", "ai-pm"], why: "Testing and hardening against attacks is AI security." },
+  { say: "Every time we change the prompt, we have no idea if answers got better or worse.", opts: ["eval-eng", "data-arch", "adoption", "rpa-dev"], why: "Measuring quality across changes is evaluation engineering." },
+  { say: "Finance has 40 UiPath bots that break every month.", opts: ["rpa-dev", "ml-eng", "ai-gov", "fde"], why: "Maintaining and modernizing bots is automation development." },
+  { say: "We are fine-tuning a model for radiology notes and need clinicians to rate its outputs.", opts: ["ai-trainer-model", "ai-trainer-people", "integration", "coe-lead"], why: "Expert rating of model outputs is model-side AI training." },
+  { say: "We need someone to run hands-on sessions teaching our claims adjusters to use the new assistant.", opts: ["ai-trainer-people", "ai-trainer-model", "mlops", "data-eng"], why: "Teaching employees to use AI is workforce enablement." },
+  { say: "Each department has thirty ideas for AI and nobody is deciding which to build.", opts: ["ai-pm", "ai-platform", "data-steward", "conv-design"], why: "Prioritizing use cases and defining success is product management." },
+  { say: "Five teams are each paying for their own model access and nobody knows the total bill.", opts: ["ai-platform", "ds", "ai-trainer-model", "ba-process"], why: "Shared access, logging and cost control is AI platform engineering." },
+  { say: "Our HR team wants a simple app and an agent in Teams. We already own Power Platform.", opts: ["lowcode-dev", "ml-eng", "model-risk", "ai-arch"], why: "Building on a licensed low-code platform suits a low-code developer." },
+  { say: "The agent demo is great. It just cannot read or update anything in SAP.", opts: ["integration", "context-eng", "adoption", "ds"], why: "Connecting agents to enterprise systems is integration engineering." },
+  { say: "We want to predict which customers will cancel next quarter from our own data.", opts: ["ds", "agent-dev", "ai-gov", "lowcode-dev"], why: "Predictive modeling on company data is data science." },
+  { say: "We need one design for how all our AI gets built: which platform, how it is secured, what it costs.", opts: ["ai-arch", "ai-trainer-people", "rpa-dev", "analytics-eng"], why: "End-to-end design and platform choices belong to an AI architect." },
+  { say: "Our bank's regulator expects independent validation before the model goes live.", opts: ["model-risk", "ai-eng", "coe-lead", "conv-design"], why: "Independent validation is model risk management." },
+];
+
+/* Candidate statements. `real: true` means it sounds like credible production
+   experience. */
+const CLAIMS = [
+  { t: "We kept a test set of 600 real tickets and re-scored the assistant on every release.", real: true, why: "Concrete evals with numbers are a strong production signal." },
+  { t: "I am an expert in ChatGPT, Claude, Gemini, LangChain, LlamaIndex, CrewAI, Pinecone and 14 other tools.", real: false, why: "A tool list with no outcomes. Ask what was built and who used it." },
+  { t: "I trained a large language model from scratch at my last startup. There were twelve of us.", real: false, why: "Training an LLM from scratch costs far more than a small firm can spend. Ask what they actually did." },
+  { t: "Cost per conversation was too high, so we routed simple questions to a smaller model and cached repeats.", real: true, why: "Specific cost trade-offs come from running a live system." },
+  { t: "The agent could draft refunds, and anything over fifty dollars went to a person for approval.", real: true, why: "Clear permission boundaries show real deployment thinking." },
+  { t: "Our AI was 100 percent accurate.", real: false, why: "No production AI system is. A real builder quotes a measured rate and how they measured it." },
+  { t: "Retrieval kept pulling the wrong policy version, so we added document dates and filtered on them.", real: true, why: "A specific failure and a specific fix." },
+  { t: "We leveraged cutting-edge generative AI synergies to transform the enterprise.", real: false, why: "No detail at all. Ask for one concrete system." },
+  { t: "I built the ingestion pipeline myself. A teammate owned the front end.", real: true, why: "Clear on personal contribution." },
+  { t: "It never went live, but the demo impressed leadership.", real: false, why: "Honest, and it is pilot experience. Present it as that." },
+  { t: "When the vendor retired the model we were on, I ran our evals against the replacement before we switched.", real: true, why: "Model migration with testing is real operating experience." },
+  { t: "I completed nine AI certificates this year, so I am ready to lead your platform.", real: false, why: "Courses show interest. Leading a platform needs delivery history." },
+  { t: "Security found a prompt injection path through uploaded PDFs, so we stripped hidden text and limited what the agent could call.", real: true, why: "Names a real attack and a sensible mitigation." },
+  { t: "I do not really do testing. The model is smart enough.", real: false, why: "Skipping evaluation is the clearest sign of demo-level work." },
+  { t: "Adoption stalled at 20 percent until we built role-specific examples with each team lead.", real: true, why: "Measured adoption and a specific intervention." },
+  { t: "We used agents.", real: false, why: "Too vague to assess. Ask what the agent did and what it was allowed to touch." },
+];
+
+/* Scripted calls. Each turn: the other person speaks, you pick a reply.
+   pts: 3 best, 1 acceptable, 0 poor. */
+const CALLS = [
+  {
+    id: "cio", kind: "Client", title: "The vague AI req",
+    who: "Dana, VP of IT at a regional insurer",
+    setup: "Dana has budget approval and has asked three agencies for 'AI people'.",
+    turns: [
+      { line: "We need a couple of AI people. Can you send me some resumes this week?", opts: [
+        { t: "Absolutely. I will have five over by Friday.", pts: 0, fb: "Fast, and you know nothing. So do the other two agencies." },
+        { t: "I can. So I send the right ones, what is the business outcome this work is meant to move?", pts: 3, fb: "Outcome first. You have set yourself apart in one sentence." },
+        { t: "Sure. Do you want machine learning engineers or data scientists?", pts: 1, fb: "A reasonable question asked too early. She may not know yet." },
+      ]},
+      { line: "Claims. Adjusters spend hours reading documents. We ran a pilot with an assistant that summarizes files.", opts: [
+        { t: "Great, so you need a prompt engineer.", pts: 0, fb: "You jumped to a title on thin evidence." },
+        { t: "How did the pilot go? What stopped it from going live?", pts: 3, fb: "The blocker will name the role." },
+        { t: "Which LLM did you use?", pts: 1, fb: "Useful later. It does not tell you what is missing." },
+      ]},
+      { line: "Adjusters liked it, but it sometimes cited the wrong policy version. And compliance has not signed off.", opts: [
+        { t: "That sounds like the model is not good enough. You should switch vendors.", pts: 0, fb: "You are guessing at architecture. Wrong versions usually point to data and retrieval." },
+        { t: "So two gaps: the data behind it, and proof for compliance that answers are right. Which cloud is this on?", pts: 3, fb: "You restated the need clearly and moved to the stack." },
+        { t: "Compliance is always slow. Shall I send AI engineers anyway?", pts: 0, fb: "You dismissed the blocker that will sink the project." },
+      ]},
+      { line: "Azure. We are a Microsoft shop. Honestly I am not sure what titles I need.", opts: [
+        { t: "From what you have described: a data engineer to fix the document pipeline, an AI engineer with Azure experience to rebuild retrieval, and someone to build evaluation so compliance has evidence.", pts: 3, fb: "A specific, reasoned plan tied to her own words." },
+        { t: "You need an AI architect, three ML engineers, a data scientist and a governance team.", pts: 0, fb: "Over-selling. She asked for a couple of people and has one pilot." },
+        { t: "Let me send a mix and you can tell me which you like.", pts: 1, fb: "It keeps things moving and gives away your advantage." },
+      ]},
+      { line: "That is clearer than our own job description. What do you need from me?", opts: [
+        { t: "Thirty minutes with the pilot lead to confirm the stack, and whether this is funded as contract or permanent. I will come back with a shortlist and what the market looks like for each role.", pts: 3, fb: "Clear next step, a technical check, and you promised market insight." },
+        { t: "Just a signed agreement.", pts: 1, fb: "Fine, though you skipped the detail your recruiter needs." },
+        { t: "Nothing. I have it from here.", pts: 0, fb: "You still do not know budget, timeline or contract type." },
+      ]},
+    ],
+  },
+  {
+    id: "objection", kind: "Client", title: "We will do it in-house",
+    who: "Marcus, Director of Engineering at a logistics company",
+    setup: "Marcus has 40 engineers and a mandate to add agents to the dispatch platform.",
+    turns: [
+      { line: "Thanks, but we are going to upskill our own engineers. We do not need outside AI talent.", opts: [
+        { t: "Upskilling rarely works for AI. You will fall behind.", pts: 0, fb: "You told him his plan is wrong. He will stop listening." },
+        { t: "That is a sound plan, and your engineers know the platform. Who leads the first build while they are learning?", pts: 3, fb: "Agree, then find the gap." },
+        { t: "Understood. I will check back next quarter.", pts: 1, fb: "Polite, and you left without learning anything." },
+      ]},
+      { line: "Fair question. Nobody here has shipped an agent before. We have a date in Q2.", opts: [
+        { t: "Then you need to hire a full agent team right away.", pts: 0, fb: "He just told you he wants to grow his own people." },
+        { t: "One option: a contract engineer who has shipped agents in production, pairing with your team for six months so the knowledge stays.", pts: 3, fb: "Fits his plan and solves the deadline." },
+        { t: "Q2 is tight. Have you thought about pushing the date?", pts: 0, fb: "Not your call, and it offers no help." },
+      ]},
+      { line: "Maybe. But contract rates for these people are steep.", opts: [
+        { t: "I can find someone cheaper if you are flexible on experience.", pts: 1, fb: "Possible, though it gives up the thing he needs: someone who has done it." },
+        { t: "They are, because few people have shipped this. What would missing Q2 cost? If it helps, we can scope it to the first release only.", pts: 3, fb: "Reframes rate against outcome and offers a smaller commitment." },
+        { t: "That is just the market. Take it or leave it.", pts: 0, fb: "True and unhelpful." },
+      ]},
+      { line: "What would I even look for in that person?", opts: [
+        { t: "Someone who knows a lot of AI tools.", pts: 0, fb: "Tool lists are the weakest signal." },
+        { t: "Someone who can describe an agent they put in production: what it was allowed to do, how they tested it, and what broke. Backend depth matters as much as AI.", pts: 3, fb: "You sound like a partner who knows how to screen." },
+        { t: "A PhD in machine learning.", pts: 0, fb: "Wrong profile. This is an engineering job." },
+      ]},
+    ],
+  },
+  {
+    id: "screen", kind: "Candidate", title: "Real or resume padding",
+    who: "Priya, AI Engineer, six years of experience",
+    setup: "Her resume lists 'built enterprise GenAI platform'. You have ten minutes.",
+    turns: [
+      { line: "I built our company's GenAI platform. Happy to walk you through my background.", opts: [
+        { t: "Great. Which tools do you know?", pts: 1, fb: "You will get a list. It will not tell you what she did." },
+        { t: "Tell me about one system on it that real users relied on. Who used it?", pts: 3, fb: "Straight to production evidence." },
+        { t: "Perfect, that is exactly what my client needs. What rate are you looking for?", pts: 0, fb: "You have verified nothing." },
+      ]},
+      { line: "An assistant for our field technicians, about 900 of them. It answers repair questions from our manuals.", opts: [
+        { t: "Which parts did you build yourself?", pts: 3, fb: "Separates her work from the team's." },
+        { t: "Wow, 900 users. Impressive.", pts: 0, fb: "Encouraging, and you learned nothing new." },
+        { t: "Was that on Azure?", pts: 1, fb: "Worth knowing. Ask after you understand her role." },
+      ]},
+      { line: "The retrieval pipeline and the evaluation suite. Another engineer did the mobile app.", opts: [
+        { t: "How did you know the answers were good?", pts: 3, fb: "The single best question for an AI engineer." },
+        { t: "So you did not do the full stack?", pts: 0, fb: "Sounds like criticism of an honest answer." },
+        { t: "Good. Can you start in two weeks?", pts: 1, fb: "Too soon. One more question would confirm depth." },
+      ]},
+      { line: "We had 400 real technician questions with answers our senior techs approved. We scored every release against them and tracked the wrong-answer rate.", opts: [
+        { t: "And what went wrong along the way?", pts: 3, fb: "Real builders have scars. Her answer will confirm it." },
+        { t: "I do not really follow the technical part, but it sounds good.", pts: 0, fb: "You do not need to judge the detail. Saying this costs you credibility." },
+        { t: "Great. What are you looking for in your next role?", pts: 1, fb: "A good question. You could have confirmed one more thing first." },
+      ]},
+      { line: "Early on it mixed up two product lines. We added product tags to every chunk and filtered on them. Wrong answers dropped by more than half.", opts: [
+        { t: "That is the kind of detail my client will want to hear. Here is what I know about the role: funded through next year, two systems live, Azure, reports to the CTO.", pts: 3, fb: "You confirmed she is real, then sold the role with the facts candidates care about." },
+        { t: "Excellent. I will submit you today.", pts: 1, fb: "She is strong, and you have told her nothing about the job." },
+        { t: "It is a great opportunity with a great company.", pts: 0, fb: "Strong candidates pass on vague roles." },
+      ]},
+    ],
+  },
+  {
+    id: "adjacent", kind: "Candidate", title: "The adjacent mover",
+    who: "Tom, Senior Backend Engineer, nine years of experience",
+    setup: "No AI title. Your client needs an agent developer and the pool is thin.",
+    turns: [
+      { line: "I should say up front, I have never had 'AI' in my job title.", opts: [
+        { t: "Then this probably is not a fit. Thanks for your time.", pts: 0, fb: "You may have just passed on your best candidate." },
+        { t: "That is fine. Have you built anything with AI, at work or on the side?", pts: 3, fb: "Look for the evidence of the move." },
+        { t: "No problem, we can adjust your resume.", pts: 0, fb: "Never. Misrepresenting a candidate costs the client's trust." },
+      ]},
+      { line: "At work I built an agent that triages our on-call alerts and opens tickets. The team has used it for five months.", opts: [
+        { t: "What is it allowed to do on its own, and how did you test it?", pts: 3, fb: "Checks both safety thinking and evaluation." },
+        { t: "That counts. I will call you an AI engineer.", pts: 0, fb: "Overselling. Present the facts." },
+        { t: "Which framework?", pts: 1, fb: "Fine, and less revealing than how it behaves." },
+      ]},
+      { line: "It can open and label tickets. It cannot close them or page anyone without a person. I replayed three months of old alerts to test it.", opts: [
+        { t: "Where do you feel least experienced on the AI side?", pts: 3, fb: "You need the gap so you can present him honestly." },
+        { t: "Perfect. You are basically a senior AI engineer.", pts: 0, fb: "One project does not make that true." },
+        { t: "Great. What is your rate?", pts: 1, fb: "You still need the gap before you pitch him." },
+      ]},
+      { line: "Evaluation at scale, and retrieval. I have only done small versions.", opts: [
+        { t: "I will present you as that: nine years of backend, one agent in production for five months, with evaluation and retrieval as growth areas. Comfortable?", pts: 3, fb: "An honest trade-off the client can weigh. This wins interviews." },
+        { t: "I will leave that part out.", pts: 0, fb: "The client will find it in the interview and stop trusting your submittals." },
+        { t: "Maybe take a course first and call me back.", pts: 1, fb: "He is already viable. Let the client decide." },
+      ]},
+    ],
+  },
+];
+
+/* AI Spring Training — the engine. Content lives in content/*.js, which the
+   build concatenates ahead of this file into one script.
+
+   Progress is kept in localStorage: it is one person's training record on one
+   browser. Every read and write is guarded so the app still runs where storage
+   is blocked; progress then lasts for the visit only. */
+
+const KEY = "ai-spring-training-v1";
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const dayStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const today = () => dayStr(new Date());
+const roleById = (id) => ROLES.find((r) => r.id === id);
+const modById = (id) => MODULES.find((m) => m.id === id);
+
+const LEVELS = [
+  [0, "Rookie Ball"], [150, "Single-A"], [400, "Double-A"], [750, "Triple-A"],
+  [1200, "The Show"], [1800, "All-Star"], [2600, "Hall of Fame"],
+];
+const PASS = 4; // of 5: a module is mastered at 80%
+const TRYOUT_SIZE = 20;
+const TRYOUT_PASS = 16;
+
+const BADGES = [
+  { id: "first", mark: "1st", name: "First Pitch", desc: "Finish your first lesson", test: (s) => Object.keys(s.lessons).length >= 1 },
+  { id: "onbase", mark: "OB", name: "On Base", desc: "Master a module quiz", test: () => mastered() >= 1 },
+  { id: "cycle", mark: "4x", name: "The Cycle", desc: "Master four modules", test: () => mastered() >= 4 },
+  { id: "fivetool", mark: "5T", name: "Five-Tool Player", desc: "Master all ten modules", test: () => mastered() >= MODULES.length },
+  { id: "perfect", mark: "PG", name: "Perfect Game", desc: "Score 5 of 5 on a module quiz", test: (s) => Object.values(s.quiz).some((v) => v >= 5) },
+  { id: "scout", mark: "SC", name: "Head Scout", desc: "7 of 8 in Scout the Role", test: (s) => (s.best.scout || 0) >= 7 },
+  { id: "eye", mark: "GE", name: "Good Eye", desc: "7 of 8 in Signal or Noise", test: (s) => (s.best.claims || 0) >= 7 },
+  { id: "closer", mark: "HR", name: "Closer", desc: "Hit a home run on a live call", test: (s) => Object.values(s.calls).some((v) => v >= 0.9) },
+  { id: "speed", mark: "60", name: "Speedster", desc: "12 right in a speed round", test: (s) => (s.best.speed || 0) >= 12 },
+  { id: "cards", mark: "28", name: "Card Collector", desc: "Open every scouting report", test: (s) => Object.keys(s.seen).length >= ROLES.length },
+  { id: "talk", mark: "AZ", name: "Talks the Talk", desc: "Know 40 glossary terms", test: (s) => Object.keys(s.known).length >= 40 },
+  { id: "streak", mark: "3D", name: "Hitting Streak", desc: "Train three days in a row", test: (s) => s.streak >= 3 },
+  { id: "called", mark: "MLB", name: "Called Up", desc: "Pass the Tryout", test: (s) => !!s.cert },
+];
+
+/* — state — */
+const blank = () => ({ name: "", xp: 0, lessons: {}, quiz: {}, badges: {}, last: "", streak: 0, known: {}, seen: {}, best: {}, calls: {}, daily: "", cert: null });
+let S = blank();
+try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch { /* storage blocked: start fresh */ }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* keep going in memory */ } };
+
+const levelOf = (xp) => { let i = 0; while (i + 1 < LEVELS.length && xp >= LEVELS[i + 1][0]) i++; return i; };
+const mastered = () => MODULES.filter((m) => (S.quiz[m.id] || 0) >= PASS).length;
+const lessonsDone = (m) => m.lessons.filter((_, i) => S.lessons[`${m.id}:${i}`]).length;
+const totalLessons = MODULES.reduce((n, m) => n + m.lessons.length, 0);
+
+/* Every reward goes through here so the streak, level-ups and badges are
+   checked in one place. */
+function award(xp, label) {
+  const before = levelOf(S.xp);
+  const t = today();
+  if (S.last !== t) {
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    S.streak = S.last === dayStr(y) ? S.streak + 1 : 1;
+    S.last = t;
+  }
+  S.xp += xp;
+  if (xp > 0) toast(`+${xp} XP`, label);
+  const after = levelOf(S.xp);
+  let party = false;
+  if (after > before) { toast(`Promoted to ${LEVELS[after][1]}`, "New level"); party = true; }
+  for (const b of BADGES) {
+    if (!S.badges[b.id] && b.test(S)) { S.badges[b.id] = t; toast(`Badge: ${b.name}`, b.desc); party = true; }
+  }
+  if (party) confetti();
+  save();
+  renderScore();
+}
+
+function toast(title, sub) {
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.innerHTML = `${esc(title)}${sub ? `<small>${esc(sub)}</small>` : ""}`;
+  $("#toasts").append(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+function confetti() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c = $("#confetti");
+  const ctx = c.getContext("2d");
+  c.hidden = false;
+  c.width = innerWidth; c.height = innerHeight;
+  const colors = ["#f0b03c", "#8fc0ea", "#74d6a4", "#ffffff", "#2f5f85"];
+  const bits = Array.from({ length: 90 }, () => ({
+    x: innerWidth / 2, y: innerHeight * 0.35, vx: (Math.random() - 0.5) * 14, vy: -Math.random() * 12 - 3,
+    s: 4 + Math.random() * 5, c: colors[Math.floor(Math.random() * colors.length)], r: Math.random() * 6,
+  }));
+  let frame = 0;
+  (function tick() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    for (const b of bits) {
+      b.vy += 0.35; b.x += b.vx; b.y += b.vy; b.r += 0.2;
+      ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.r);
+      ctx.fillStyle = b.c; ctx.fillRect(-b.s / 2, -b.s / 2, b.s, b.s * 0.6); ctx.restore();
+    }
+    if (++frame < 110) requestAnimationFrame(tick); else c.hidden = true;
+  })();
+}
+
+/* — view state. `ui.view` follows the hash; `ui.sub` is whatever is open
+   inside that view (a lesson, a running quiz, a call). — */
+const VIEWS = ["home", "train", "games", "guide", "profile"];
+const ui = { view: "home", sub: null, guideTab: "roles", group: "All", q: "" };
+let timer = null;
+
+function go(view, sub) {
+  clearInterval(timer); timer = null;
+  ui.view = view; ui.sub = sub || null;
+  if (location.hash !== `#${view}`) history.replaceState(null, "", `#${view}`);
+  render();
+  scrollTo(0, 0);
+}
+
+function renderScore() {
+  const li = levelOf(S.xp);
+  const lo = LEVELS[li][0];
+  const hi = li + 1 < LEVELS.length ? LEVELS[li + 1][0] : null;
+  const pct = hi ? Math.round(((S.xp - lo) / (hi - lo)) * 100) : 100;
+  $("#score").innerHTML = `
+    <span class="lvl">${esc(LEVELS[li][1])}</span>
+    <span class="meter" title="${hi ? `${hi - S.xp} XP to ${esc(LEVELS[li + 1][1])}` : "Top level"}"><i style="width:${pct}%"></i></span>
+    <span class="xp num">${S.xp} XP</span>
+    ${S.streak > 1 ? `<span class="streak num">${S.streak}-day streak</span>` : ""}`;
+}
+
+function render() {
+  for (const a of document.querySelectorAll("#tabs a")) {
+    if (a.getAttribute("href") === `#${ui.view}`) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+  }
+  renderScore();
+  const sub = ui.sub;
+  let html;
+  if (sub && sub.type === "run") html = viewRun();
+  else if (sub && sub.type === "module") html = viewModule(modById(sub.id));
+  else if (sub && sub.type === "lesson") html = viewLesson();
+  else if (sub && sub.type === "flash") html = viewFlash();
+  else if (sub && sub.type === "speed") html = viewSpeed();
+  else if (sub && sub.type === "call") html = viewCall();
+  else html = { home: viewHome, train: viewTrain, games: viewGames, guide: viewGuide, profile: viewProfile }[ui.view]();
+  $("#view").innerHTML = html;
+}
+
+/* — Clubhouse — */
+function nextUp() {
+  for (const m of MODULES) {
+    const i = m.lessons.findIndex((_, k) => !S.lessons[`${m.id}:${k}`]);
+    if (i >= 0) return { label: `${m.title}: ${m.lessons[i].t}`, kind: "Next lesson", a: "lesson", mod: m.id, i };
+  }
+  for (const m of MODULES) if ((S.quiz[m.id] || 0) < PASS) return { label: `${m.title} quiz`, kind: "Quiz to master", a: "quiz", mod: m.id };
+  if (!S.cert) return { label: "The Tryout", kind: "Final exam", a: "tryout" };
+  return { label: "Take a live call", kind: "Keep sharp", a: "tab", to: "games" };
+}
+
+function viewHome() {
+  const li = levelOf(S.xp);
+  const hi = li + 1 < LEVELS.length ? LEVELS[li + 1] : null;
+  const pct = hi ? Math.round(((S.xp - LEVELS[li][0]) / (hi[0] - LEVELS[li][0])) * 100) : 100;
+  const n = nextUp();
+  const doneLessons = Object.keys(S.lessons).length;
+  const dailyDone = S.daily === today();
+  return `<div class="stack">
+    <div class="hero">
+      <section class="card welcome stack">
+        <div>
+          <p class="eyebrow">${esc(LEVELS[li][1])}</p>
+          <h1>${S.name ? `Welcome back, ${esc(S.name)}` : "Welcome to camp"}</h1>
+        </div>
+        <p class="muted">Ten modules, four games, four live calls and a field guide. Learn how AI teams are built so you can run sharper client and candidate calls.</p>
+        ${S.name ? "" : `<form class="namebox" data-form="name"><input id="name-in" name="name" maxlength="24" placeholder="Your first name" aria-label="Your first name" autocomplete="given-name" /><button class="btn gold">Start</button></form>`}
+        <div>
+          <div class="meter"><i style="width:${pct}%"></i></div>
+          <p class="muted num" style="margin-top:6px">${hi ? `${hi[0] - S.xp} XP to ${esc(hi[1])}` : "Top of the league"}</p>
+        </div>
+        <div class="stats">
+          <div class="stat"><b class="num">${doneLessons}/${totalLessons}</b><span>lessons</span></div>
+          <div class="stat"><b class="num">${mastered()}/${MODULES.length}</b><span>modules mastered</span></div>
+          <div class="stat"><b class="num">${Object.keys(S.badges).length}/${BADGES.length}</b><span>badges</span></div>
+        </div>
+      </section>
+      <div class="stack">
+        <section class="card stack">
+          <div><p class="eyebrow">${esc(n.kind)}</p><h3>${esc(n.label)}</h3></div>
+          <div><button class="btn" data-a="${n.a}" data-mod="${n.mod || ""}" data-i="${n.i ?? ""}" data-to="${n.to || ""}">Continue</button></div>
+        </section>
+        <section class="card stack">
+          <div><p class="eyebrow">Daily drill</p><h3>Three questions, 30 bonus XP</h3></div>
+          <div class="row">
+            <button class="btn ${dailyDone ? "ghost" : "gold"}" data-a="daily">${dailyDone ? "Practice again" : "Take today's drill"}</button>
+            ${dailyDone ? `<span class="chip good">Done today</span>` : ""}
+          </div>
+        </section>
+      </div>
+    </div>
+    <section class="card stack">
+      <div class="row spread"><h2>The lineup</h2><a class="btn ghost sm" href="#train">All training</a></div>
+      ${lineup()}
+    </section>
+    <section class="card stack">
+      <h2>Badges</h2>
+      ${badgeGrid()}
+    </section>
+  </div>`;
+}
+
+function lineup() {
+  return `<ol class="lineup">${MODULES.map((m, i) => {
+    const d = lessonsDone(m), best = S.quiz[m.id] || 0, ok = best >= PASS;
+    const pct = Math.round(((d + (ok ? 1 : 0)) / (m.lessons.length + 1)) * 100);
+    return `<li><button data-a="module" data-mod="${m.id}">
+      <span class="no num">${i + 1}</span>
+      <span><span class="ttl">${esc(m.title)}</span><br><span class="sub">${esc(m.blurb)}</span>
+        <div class="bar ${ok ? "done" : ""}"><i style="width:${pct}%"></i></div></span>
+      <span>${ok ? `<span class="chip good">Mastered</span>` : `<span class="chip num">${d}/${m.lessons.length}</span>`}</span>
+    </button></li>`;
+  }).join("")}</ol>`;
+}
+
+function badgeGrid() {
+  return `<div class="badges">${BADGES.map((b) => `<div class="badge ${S.badges[b.id] ? "on" : ""}">
+    <div class="medal">${esc(b.mark)}</div><b>${esc(b.name)}</b><span>${esc(b.desc)}</span></div>`).join("")}</div>`;
+}
+
+/* — Training — */
+function viewTrain() {
+  return `<div class="stack">
+    <div><h1>Training</h1><p class="muted">Read the lessons, then master the quiz with 4 of 5. Each lesson is worth 10 XP and each new correct quiz answer 15.</p></div>
+    <section class="card">${lineup()}</section>
+    <section class="card stack">
+      <div><p class="eyebrow">Final exam</p><h2>The Tryout</h2></div>
+      <p class="muted">${TRYOUT_SIZE} questions drawn from every module. Score ${TRYOUT_PASS} or better to get called up.${S.cert ? ` Your best: ${S.cert.score}/${TRYOUT_SIZE}.` : ""}</p>
+      <div><button class="btn gold" data-a="tryout">${S.cert ? "Retake the Tryout" : "Start the Tryout"}</button></div>
+    </section>
+  </div>`;
+}
+
+function viewModule(m) {
+  const best = S.quiz[m.id] || 0;
+  return `<div class="stack lesson">
+    <div><button class="btn ghost sm" data-a="tab" data-to="train">All modules</button></div>
+    <div><p class="eyebrow">Module ${MODULES.indexOf(m) + 1} of ${MODULES.length}</p><h1>${esc(m.title)}</h1><p class="muted">${esc(m.blurb)}</p></div>
+    <section class="card">
+      <ul class="lesson-list">${m.lessons.map((l, i) => `<li><button data-a="lesson" data-mod="${m.id}" data-i="${i}">
+        <span>${esc(l.t)}</span>${S.lessons[`${m.id}:${i}`] ? `<span class="chip good">Read</span>` : `<span class="chip gold">+10 XP</span>`}</button></li>`).join("")}</ul>
+    </section>
+    <section class="card row spread">
+      <div><h3>Module quiz</h3><p class="muted num">${best ? `Best score ${best}/5` : "Five questions"}${best >= PASS ? " · mastered" : ""}</p></div>
+      <button class="btn" data-a="quiz" data-mod="${m.id}">${best ? "Retake quiz" : "Take the quiz"}</button>
+    </section>
+  </div>`;
+}
+
+function viewLesson() {
+  const { id, i } = ui.sub;
+  const m = modById(id), l = m.lessons[i], last = i === m.lessons.length - 1;
+  return `<article class="stack lesson">
+    <div class="row spread">
+      <button class="btn ghost sm" data-a="module" data-mod="${m.id}">${esc(m.title)}</button>
+      <span class="dots" aria-label="Lesson ${i + 1} of ${m.lessons.length}">${m.lessons.map((_, k) => `<i class="${k <= i ? "on" : ""}"></i>`).join("")}</span>
+    </div>
+    <section class="card stack">
+      <div><p class="eyebrow">Lesson ${i + 1} of ${m.lessons.length}</p><h1>${esc(l.t)}</h1></div>
+      <div class="body">${l.body.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
+      <div class="say"><p class="eyebrow">Say it on a call</p><p>${esc(l.say)}</p></div>
+    </section>
+    <div class="row spread">
+      ${i > 0 ? `<button class="btn ghost" data-a="lesson" data-mod="${m.id}" data-i="${i - 1}">Back</button>` : "<span></span>"}
+      <button class="btn" data-a="lesson-next">${last ? "Finish and take the quiz" : "Next lesson"}</button>
+    </div>
+  </article>`;
+}
+
+/* — The question runner: module quizzes, the daily drill, the Tryout, Scout
+   the Role and Signal or Noise all run through it. — */
+function startRun(cfg) {
+  const items = cfg.items.map((it) => {
+    const order = cfg.fixed ? it.a.map((_, k) => k) : shuffle(it.a.map((_, k) => k));
+    return { ...it, a: order.map((k) => it.a[k]), c: order.indexOf(it.c) };
+  });
+  go(cfg.view, { type: "run", cfg, items, i: 0, right: 0, picked: null, done: false });
+}
+
+function viewRun() {
+  const r = ui.sub, cfg = r.cfg;
+  if (r.done) {
+    const pct = r.right / r.items.length;
+    return `<section class="card stack result">
+      <p class="eyebrow">${esc(cfg.title)}</p>
+      <div class="big num">${r.right}/${r.items.length}</div>
+      <h2>${esc(r.verdict.head)}</h2>
+      <p class="muted">${esc(r.verdict.text)}</p>
+      ${r.verdict.xp ? `<span class="chip gold num">+${r.verdict.xp} XP</span>` : ""}
+      <div class="row" style="justify-content:center">
+        <button class="btn" data-a="rerun">${pct === 1 ? "Play again" : "Try again"}</button>
+        <button class="btn ghost" data-a="tab" data-to="${cfg.view}">Done</button>
+      </div>
+    </section>`;
+  }
+  const it = r.items[r.i], picked = r.picked;
+  return `<section class="stack run">
+    <div class="row spread">
+      <span class="eyebrow">${esc(cfg.title)} · <span class="num">${r.i + 1} of ${r.items.length}</span></span>
+      <button class="btn ghost sm" data-a="tab" data-to="${cfg.view}">Quit</button>
+    </div>
+    <div class="bar"><i style="width:${(r.i / r.items.length) * 100}%"></i></div>
+    <div>${it.eyebrow ? `<p class="eyebrow">${esc(it.eyebrow)}</p>` : ""}<h2 class="q">${esc(it.q)}</h2></div>
+    <div class="opts">${it.a.map((a, k) => `<button class="opt ${picked === null ? "" : k === it.c ? "right" : k === picked ? "wrong" : ""}" data-a="pick" data-i="${k}" ${picked === null ? "" : "disabled"}><kbd>${k + 1}</kbd><span>${esc(a)}</span></button>`).join("")}</div>
+    ${picked === null ? "" : `<div class="why ${picked === it.c ? "good" : "bad"}"><b>${picked === it.c ? "Correct" : "Not quite"}</b>${esc(it.why)}</div>
+      <div><button class="btn" id="next" data-a="next">${r.i + 1 === r.items.length ? "See result" : "Next"}</button></div>`}
+  </section>`;
+}
+
+function finishRun() {
+  const r = ui.sub;
+  r.done = true;
+  r.verdict = r.cfg.finish(r.right, r.items.length);
+  if (r.verdict.xp || r.verdict.touch) award(r.verdict.xp || 0, r.cfg.title);
+  render();
+}
+
+function quizModule(id) {
+  const m = modById(id);
+  startRun({
+    view: "train", title: `${m.title} quiz`, items: m.quiz, again: () => quizModule(id),
+    finish(right, total) {
+      const prev = S.quiz[id] || 0;
+      const xp = Math.max(0, right - prev) * 15;
+      if (right > prev) S.quiz[id] = right;
+      return right >= PASS
+        ? { xp, touch: true, head: right === total ? "Perfect game" : "Module mastered", text: "That is 80 percent or better. On to the next one." }
+        : { xp, touch: true, head: "Not mastered yet", text: `You need ${PASS} of ${total}. Review the lessons and take another swing.` };
+    },
+  });
+}
+
+const allQuestions = () => MODULES.flatMap((m) => m.quiz.map((q) => ({ ...q, eyebrow: m.title })));
+
+function dailyDrill() {
+  startRun({
+    view: "home", title: "Daily drill", items: shuffle(allQuestions()).slice(0, 3), again: dailyDrill,
+    finish(right) {
+      const first = S.daily !== today();
+      S.daily = today();
+      const xp = right * 5 + (first ? 30 : 0);
+      return { xp, touch: true, head: first ? "Drill done" : "Extra practice", text: first ? "Bonus banked. Come back tomorrow to keep the streak going." : "Today's bonus was already banked. Practice still counts." };
+    },
+  });
+}
+
+function tryout() {
+  const items = shuffle(MODULES.flatMap((m) => shuffle(m.quiz).slice(0, 2).map((q) => ({ ...q, eyebrow: m.title }))));
+  startRun({
+    view: "train", title: "The Tryout", items, again: tryout,
+    finish(right, total) {
+      const pass = right >= TRYOUT_PASS;
+      const firstPass = pass && !S.cert;
+      if (pass && (!S.cert || right > S.cert.score)) S.cert = { score: right, date: today() };
+      return pass
+        ? { xp: firstPass ? 200 : 20, touch: true, head: "You got the call", text: "You passed the Tryout. Your certificate is on your profile." }
+        : { xp: right * 2, touch: true, head: "Sent back down, for now", text: `You need ${TRYOUT_PASS} of ${total}. The module quizzes show where to practice.` };
+    },
+  });
+}
+
+function scoutGame() {
+  const items = shuffle(SCOUT).slice(0, 8).map((s) => ({
+    eyebrow: "A client tells you", q: `“${s.say}”`, a: s.opts.map((id) => roleById(id).name), c: 0,
+    why: `${roleById(s.opts[0]).name}. ${s.why}`,
+  }));
+  startRun({
+    view: "games", title: "Scout the Role", items, again: scoutGame,
+    finish(right, total) {
+      S.best.scout = Math.max(S.best.scout || 0, right);
+      return { xp: right * 10, touch: true, head: right >= 7 ? "Head scout material" : right >= 5 ? "Solid read" : "Keep scouting", text: `You matched ${right} of ${total} client needs to the right role.` };
+    },
+  });
+}
+
+function claimsGame() {
+  const items = shuffle(CLAIMS).slice(0, 8).map((c) => ({
+    eyebrow: "A candidate says", q: `“${c.t}”`, a: ["Production signal", "Dig deeper"], c: c.real ? 0 : 1, why: c.why,
+  }));
+  startRun({
+    view: "games", title: "Signal or Noise", items, fixed: true, again: claimsGame,
+    finish(right, total) {
+      S.best.claims = Math.max(S.best.claims || 0, right);
+      return { xp: right * 10, touch: true, head: right >= 7 ? "Good eye" : right >= 5 ? "Decent read" : "Listen for specifics", text: `You called ${right} of ${total} correctly. Numbers, users and failures are the signal.` };
+    },
+  });
+}
+
+/* — Games — */
+function viewGames() {
+  const g = (title, text, action, best, attrs = "") => `<section class="card stack">
+    <div><h3>${title}</h3><p class="muted">${text}</p></div>
+    <div class="row spread"><button class="btn" data-a="${action}" ${attrs}>Play</button>${best ? `<span class="chip num">${best}</span>` : ""}</div></section>`;
+  return `<div class="stack">
+    <div><h1>Games</h1><p class="muted">Short rounds that turn the lessons into reflexes. Every right answer earns XP.</p></div>
+    <div class="grid g2">
+      ${g("Scout the Role", "A client describes a problem. Pick the role that fixes it. Eight per round.", "scout", S.best.scout != null ? `Best ${S.best.scout}/8` : "")}
+      ${g("Signal or Noise", "A candidate makes a claim. Is it a production signal, or do you need to dig deeper?", "claims", S.best.claims != null ? `Best ${S.best.claims}/8` : "")}
+      ${g("Speed Round", "Sixty seconds. Match as many definitions to their terms as you can.", "speed", S.best.speed != null ? `Best ${S.best.speed}` : "")}
+      ${g("Flash Cards", `Flip through the glossary and mark the terms you know.`, "flash", `${Object.keys(S.known).length}/${GLOSSARY.length} known`)}
+    </div>
+    <div><h2>Live calls</h2><p class="muted">Scripted conversations. Choose what you would say and see how it lands.</p></div>
+    <div class="grid g2">
+      ${CALLS.map((c) => {
+        const b = S.calls[c.id];
+        return `<section class="card stack">
+          <div><p class="eyebrow">${c.kind} call</p><h3>${esc(c.title)}</h3><p class="muted">${esc(c.who)}</p></div>
+          <div class="row spread"><button class="btn" data-a="call" data-id="${c.id}">Take the call</button>${b != null ? `<span class="chip">${esc(rating(b))}</span>` : ""}</div>
+        </section>`;
+      }).join("")}
+    </div>
+  </div>`;
+}
+
+const rating = (p) => (p >= 0.9 ? "Home run" : p >= 0.75 ? "Triple" : p >= 0.55 ? "Double" : p >= 0.35 ? "Single" : "Strikeout");
+
+function viewCall() {
+  const s = ui.sub, c = CALLS.find((x) => x.id === s.id);
+  const first = c.who.split(",")[0];
+  const log = s.log.map((m) => m.who === "them"
+    ? `<div class="msg them"><div class="who">${esc(first)}</div>${esc(m.text)}</div>`
+    : `<div class="msg you"><div class="who">You</div>${esc(m.text)}</div><div class="fb p${m.pts}">${esc(m.fb)}</div>`).join("");
+  const done = s.i >= c.turns.length;
+  const max = c.turns.length * 3;
+  return `<section class="stack run">
+    <div class="row spread"><span class="eyebrow">${c.kind} call · ${esc(c.title)}</span><button class="btn ghost sm" data-a="tab" data-to="games">Hang up</button></div>
+    <div><h2>${esc(c.who)}</h2><p class="muted">${esc(c.setup)}</p></div>
+    <div class="chat">${log}</div>
+    ${done ? `<section class="card stack result">
+        <div class="big">${esc(rating(s.pts / max))}</div>
+        <p class="muted num">${s.pts} of ${max} points</p>
+        ${s.xp ? `<span class="chip gold num">+${s.xp} XP</span>` : ""}
+        <div class="row" style="justify-content:center"><button class="btn" data-a="call" data-id="${c.id}">Replay</button><button class="btn ghost" data-a="tab" data-to="games">Done</button></div>
+      </section>`
+      : `<div class="stack"><p class="eyebrow">Your reply</p><div class="opts">${s.opts.map((o, k) => `<button class="opt" data-a="say" data-i="${k}"><kbd>${k + 1}</kbd><span>${esc(o.t)}</span></button>`).join("")}</div></div>`}
+  </section>`;
+}
+
+function startCall(id) {
+  const c = CALLS.find((x) => x.id === id);
+  go("games", { type: "call", id, i: 0, pts: 0, xp: 0, log: [{ who: "them", text: c.turns[0].line }], opts: shuffle(c.turns[0].opts) });
+}
+
+function sayLine(k) {
+  const s = ui.sub, c = CALLS.find((x) => x.id === s.id), o = s.opts[k];
+  s.log.push({ who: "you", text: o.t, fb: o.fb, pts: o.pts });
+  s.pts += o.pts; s.i++;
+  if (s.i < c.turns.length) {
+    s.log.push({ who: "them", text: c.turns[s.i].line });
+    s.opts = shuffle(c.turns[s.i].opts);
+  } else {
+    const p = s.pts / (c.turns.length * 3);
+    S.calls[c.id] = Math.max(S.calls[c.id] || 0, p);
+    s.xp = s.pts * 5;
+    award(s.xp, c.title);
+  }
+  render();
+  const end = $(".chat").lastElementChild;
+  if (end) end.scrollIntoView({ block: "center", behavior: "smooth" });
+}
+
+/* Speed round: definition up, four terms, sixty seconds. */
+function startSpeed() {
+  go("games", { type: "speed", left: 60, score: 0, miss: 0, card: speedCard(), over: false });
+  timer = setInterval(() => {
+    const s = ui.sub;
+    if (!s || s.type !== "speed") { clearInterval(timer); return; }
+    s.left--;
+    if (s.left <= 0) {
+      clearInterval(timer); timer = null;
+      s.over = true;
+      S.best.speed = Math.max(S.best.speed || 0, s.score);
+      s.xp = s.score * 5;
+      award(s.xp, "Speed Round");
+      render();
+    } else {
+      const t = $("#clock");
+      if (t) { t.textContent = `0:${String(s.left).padStart(2, "0")}`; t.classList.toggle("low", s.left <= 10); }
+    }
+  }, 1000);
+}
+function speedCard() {
+  const picks = shuffle(GLOSSARY).slice(0, 4);
+  return { def: picks[0][1], term: picks[0][0], opts: shuffle(picks.map((p) => p[0])) };
+}
+function viewSpeed() {
+  const s = ui.sub;
+  if (s.over) return `<section class="card stack result">
+    <p class="eyebrow">Speed Round</p><div class="big num">${s.score}</div>
+    <h2>${s.score >= 12 ? "Lightning quick" : s.score >= 7 ? "Good pace" : "Warming up"}</h2>
+    <p class="muted num">${s.score} right, ${s.miss} missed. Best: ${S.best.speed}.</p>
+    ${s.xp ? `<span class="chip gold num">+${s.xp} XP</span>` : ""}
+    <div class="row" style="justify-content:center"><button class="btn" data-a="speed">Play again</button><button class="btn ghost" data-a="tab" data-to="games">Done</button></div>
+  </section>`;
+  return `<section class="stack run">
+    <div class="row spread"><span class="eyebrow">Speed Round · <span class="num">${s.score} right</span></span>
+      <span class="timer num ${s.left <= 10 ? "low" : ""}" id="clock">${s.left === 60 ? "1:00" : `0:${String(s.left).padStart(2, "0")}`}</span></div>
+    <div><p class="eyebrow">Which term is this?</p><h2 class="q">${esc(s.card.def)}</h2></div>
+    <div class="opts">${s.card.opts.map((o, k) => `<button class="opt" data-a="speed-pick" data-t="${esc(o)}"><kbd>${k + 1}</kbd><span>${esc(o)}</span></button>`).join("")}</div>
+    <div><button class="btn ghost sm" data-a="tab" data-to="games">Quit</button></div>
+  </section>`;
+}
+
+/* Flash cards: unknown terms first. */
+function startFlash() {
+  const deck = shuffle(GLOSSARY.filter((g) => !S.known[g[0]])).concat(shuffle(GLOSSARY.filter((g) => S.known[g[0]])));
+  go("games", { type: "flash", deck, i: 0, flipped: false });
+}
+function viewFlash() {
+  const s = ui.sub, [term, def] = s.deck[s.i];
+  const known = Object.keys(S.known).length;
+  return `<section class="stack run">
+    <div class="row spread"><span class="eyebrow">Flash Cards · <span class="num">${known} of ${GLOSSARY.length} known</span></span><button class="btn ghost sm" data-a="tab" data-to="games">Done</button></div>
+    <div class="bar done"><i style="width:${(known / GLOSSARY.length) * 100}%"></i></div>
+    <button class="flash" data-a="flip" aria-label="Flip card">
+      ${s.flipped ? `<div class="stack"><p class="eyebrow">${esc(term)}</p><p class="def">${esc(def)}</p></div>` : `<div><div class="term">${esc(term)}</div><p class="muted">Tap to see the definition</p></div>`}
+    </button>
+    <div class="row" style="justify-content:center">
+      <button class="btn ghost" data-a="flash-next" data-k="0">Still learning</button>
+      <button class="btn" data-a="flash-next" data-k="1">Know it${S.known[term] ? "" : " · +2 XP"}</button>
+    </div>
+  </section>`;
+}
+
+/* — Field Guide — */
+const GUIDE_TABS = [["roles", "Scouting reports"], ["lifecycle", "Who you need when"], ["platforms", "Platform map"], ["talk", "Talk tracks"], ["glossary", "Glossary"]];
+
+function viewGuide() {
+  return `<div class="stack">
+    <div><h1>Field Guide</h1><p class="muted">Reference for the desk. Open it before a call.</p></div>
+    <div class="subtabs" role="tablist">${GUIDE_TABS.map(([id, label]) => `<button class="chip" role="tab" aria-pressed="${ui.guideTab === id}" data-a="guide-tab" data-id="${id}">${esc(label)}</button>`).join("")}</div>
+    ${["roles", "platforms", "glossary"].includes(ui.guideTab) ? `<input class="search" id="guide-q" type="search" placeholder="Search ${ui.guideTab === "roles" ? "roles and skills" : ui.guideTab}" aria-label="Search" value="${esc(ui.q)}" />` : ""}
+    <div id="guide-body" class="stack">${guideBody()}</div>
+  </div>`;
+}
+
+const pips = (n) => `<span class="pips" aria-label="${n} of 5">${[1, 2, 3, 4, 5].map((k) => `<i class="${k <= n ? "on" : ""}"></i>`).join("")}</span>`;
+const roleChip = (id) => { const r = roleById(id); return `<button class="chip" data-a="role" data-id="${id}">${esc(r.name)}</button>`; };
+
+function guideBody() {
+  const q = ui.q.trim().toLowerCase();
+  const hit = (...parts) => !q || parts.join(" ").toLowerCase().includes(q);
+  if (ui.guideTab === "roles") {
+    const list = ROLES.filter((r) => (ui.group === "All" || r.group === ui.group) && hit(r.name, r.aka, r.what, r.skills.join(" ")));
+    return `<div class="row">${["All", ...ROLE_GROUPS].map((g) => `<button class="chip" aria-pressed="${ui.group === g}" data-a="group" data-id="${esc(g)}">${esc(g)}</button>`).join("")}
+        <span class="muted num" style="margin-left:auto">${Object.keys(S.seen).length}/${ROLES.length} opened</span></div>
+      ${list.length ? `<div class="grid g3">${list.map((r) => `<button class="card rolecard" data-a="role" data-id="${r.id}">
+        <span class="row spread"><span class="eyebrow">${esc(r.group)}</span>${S.seen[r.id] ? `<span class="seen">Opened</span>` : ""}</span>
+        <h3>${esc(r.name)}</h3><p>${esc(r.what)}</p>
+        <span class="muted" style="font-size:.85rem">Hard to fill ${pips(r.scarcity)}</span></button>`).join("")}</div>` : `<p class="muted">No roles match that search.</p>`}`;
+  }
+  if (ui.guideTab === "lifecycle") {
+    return `<section class="card"><p class="muted">The seven phases of an AI program and the roles a client is short of in each. Ask which phase they are in.</p>
+      ${LIFECYCLE.map((p, i) => `<div class="phase"><div><p class="eyebrow">Phase ${i + 1}</p><h3>${esc(p.phase)}</h3><p class="muted">${esc(p.goal)}</p></div>
+      <div class="row">${p.roles.map(roleChip).join("")}</div></div>`).join("")}</section>`;
+  }
+  if (ui.guideTab === "platforms") {
+    const cats = PLATFORMS.map((c) => ({ ...c, items: c.items.filter((it) => hit(it[0], it[1], c.cat)) })).filter((c) => c.items.length);
+    return cats.length ? cats.map((c) => `<section class="card stack"><h3>${esc(c.cat)}</h3><div class="scroll-x"><table class="ref">
+      ${c.items.map(([n, d, role]) => `<tr><th scope="row">${esc(n)}</th><td>${esc(d)}<div style="margin-top:6px">Often means ${roleChip(role)}</div></td></tr>`).join("")}</table></div></section>`).join("")
+      : `<p class="muted">No platforms match that search.</p>`;
+  }
+  if (ui.guideTab === "glossary") {
+    const list = GLOSSARY.filter(([t, d]) => hit(t, d)).sort((a, b) => a[0].localeCompare(b[0]));
+    return list.length ? `<section class="card"><div class="scroll-x"><table class="ref">${list.map(([t, d]) => `<tr><th scope="row">${esc(t)}</th><td>${esc(d)}</td></tr>`).join("")}</table></div></section>`
+      : `<p class="muted">No terms match that search.</p>`;
+  }
+  const T = TALK_TRACKS;
+  const qa = (rows, they) => `<div class="qa">${rows.map(([a, b]) => `<div><p class="${they ? "they" : "eyebrow"}">${they ? `“${esc(a)}”` : esc(a)}</p><p>${esc(b)}</p></div>`).join("")}</div>`;
+  return `<section class="card stack"><h3>Client discovery questions</h3>${qa(T.discovery)}</section>
+    <section class="card stack"><h3>Objections and replies</h3>${qa(T.objections, true)}</section>
+    <section class="card stack"><h3>Candidate screening questions</h3>${qa(T.candidate)}</section>`;
+}
+
+function openRole(id) {
+  const r = roleById(id);
+  const fresh = !S.seen[id];
+  S.seen[id] = 1;
+  const d = $("#dlg");
+  d.innerHTML = `<div class="in">
+    <div class="row spread"><span class="eyebrow">Scouting report · ${esc(r.group)}</span><button class="btn ghost sm" data-a="close">Close</button></div>
+    <div><h2 id="dlg-title">${esc(r.name)}</h2><p class="muted">Also called: ${esc(r.aka)}</p></div>
+    <p>${esc(r.what)}</p>
+    <div><h4>The client needs one when</h4><p>${esc(r.need)}</p></div>
+    <div><h4>Listen for</h4><div class="row">${r.skills.map((s) => `<span class="chip">${esc(s)}</span>`).join("")}</div></div>
+    <div><h4>Screening questions</h4><ul>${r.screen.map((s) => `<li>${esc(s)}</li>`).join("")}</ul></div>
+    <div><h4>Often confused with</h4><p>${esc(r.confuse)}</p></div>
+    <p class="muted" style="font-size:.9rem">Hard to fill ${pips(r.scarcity)} <span>(a directional read, not market data)</span></p>
+  </div>`;
+  if (!d.open) d.showModal();
+  if (fresh) award(3, `Scouting report: ${r.name}`); else save();
+  if (ui.view === "guide" && !ui.sub && ui.guideTab === "roles") $("#guide-body").innerHTML = guideBody();
+}
+
+/* — Profile — */
+function viewProfile() {
+  const li = levelOf(S.xp);
+  return `<div class="stack">
+    <h1>Profile</h1>
+    <div class="grid g2">
+      <section class="card stack">
+        <div><p class="eyebrow">Player</p><h2>${esc(S.name || "Unnamed rookie")}</h2><p class="muted num">${esc(LEVELS[li][1])} · ${S.xp} XP · ${S.streak || 0}-day streak</p></div>
+        <form class="namebox" data-form="name"><input id="name-edit" name="name" maxlength="24" value="${esc(S.name)}" placeholder="Your first name" aria-label="Your first name" /><button class="btn ghost">Save name</button></form>
+      </section>
+      <section class="card stack">
+        <div><p class="eyebrow">Certificate</p><h2>${S.cert ? "Called up" : "Not yet earned"}</h2></div>
+        ${S.cert ? `<p>${esc(S.name || "This player")} passed the AI Spring Training Tryout with <b class="num">${S.cert.score}/${TRYOUT_SIZE}</b> on ${esc(S.cert.date)}.</p>`
+          : `<p class="muted">Pass the Tryout with ${TRYOUT_PASS} of ${TRYOUT_SIZE} to earn it.</p><div><button class="btn gold" data-a="tryout">Start the Tryout</button></div>`}
+      </section>
+    </div>
+    <section class="card stack"><h2>Levels</h2>
+      <div class="row">${LEVELS.map(([xp, name], i) => `<span class="chip ${i <= li ? "gold" : ""} num">${esc(name)} · ${xp}</span>`).join("")}</div>
+    </section>
+    <section class="card stack"><h2>Badges</h2>${badgeGrid()}</section>
+    <section class="card stack">
+      <div><h3>Start over</h3><p class="muted">Progress is saved in this browser only. Resetting clears XP, badges and scores.</p></div>
+      <div class="row">${ui.confirmReset ? `<button class="btn danger" data-a="reset-yes">Yes, erase my progress</button><button class="btn ghost" data-a="reset-no">Keep it</button>`
+        : `<button class="btn ghost" data-a="reset">Reset progress</button>`}</div>
+    </section>
+  </div>`;
+}
+
+/* — actions — */
+const actions = {
+  tab: (d) => go(d.to),
+  module: (d) => go("train", { type: "module", id: d.mod }),
+  lesson: (d) => go("train", { type: "lesson", id: d.mod, i: +d.i }),
+  "lesson-next"() {
+    const { id, i } = ui.sub, m = modById(id), k = `${id}:${i}`;
+    if (!S.lessons[k]) { S.lessons[k] = 1; award(10, m.lessons[i].t); }
+    if (i + 1 < m.lessons.length) go("train", { type: "lesson", id, i: i + 1 }); else quizModule(id);
+  },
+  quiz: (d) => quizModule(d.mod),
+  daily: dailyDrill, tryout, scout: scoutGame, claims: claimsGame, speed: startSpeed, flash: startFlash,
+  rerun: () => ui.sub.cfg.again(),
+  pick(d) {
+    const r = ui.sub;
+    if (r.picked !== null) return;
+    r.picked = +d.i;
+    if (r.picked === r.items[r.i].c) r.right++;
+    render();
+    $("#next").focus();
+  },
+  next() {
+    const r = ui.sub;
+    if (r.i + 1 >= r.items.length) return finishRun();
+    r.i++; r.picked = null; render();
+  },
+  call: (d) => startCall(d.id),
+  say: (d) => sayLine(+d.i),
+  "speed-pick"(d) {
+    const s = ui.sub;
+    if (d.t === s.card.term) s.score++; else s.miss++;
+    s.card = speedCard(); render();
+  },
+  flip() { ui.sub.flipped = !ui.sub.flipped; render(); },
+  "flash-next"(d) {
+    const s = ui.sub, term = s.deck[s.i][0];
+    if (d.k === "1" && !S.known[term]) { S.known[term] = 1; award(2, term); }
+    if (d.k === "0" && S.known[term]) { delete S.known[term]; save(); }
+    s.i = (s.i + 1) % s.deck.length; s.flipped = false; render();
+  },
+  "guide-tab"(d) { ui.guideTab = d.id; ui.q = ""; render(); },
+  group(d) { ui.group = d.id; $("#guide-body").innerHTML = guideBody(); },
+  role: (d) => openRole(d.id),
+  close: () => $("#dlg").close(),
+  reset() { ui.confirmReset = true; render(); },
+  "reset-no"() { ui.confirmReset = false; render(); },
+  "reset-yes"() { S = blank(); save(); ui.confirmReset = false; toast("Progress erased"); go("home"); },
+};
+
+document.addEventListener("click", (e) => {
+  // A tab pointing at the hash already in the address bar fires no
+  // hashchange, so leaving a game for its own section needs handling here.
+  const tab = e.target.closest('a[href^="#"]');
+  if (tab && VIEWS.includes(tab.hash.slice(1))) { e.preventDefault(); return go(tab.hash.slice(1)); }
+  const el = e.target.closest("[data-a]");
+  if (el && actions[el.dataset.a]) actions[el.dataset.a](el.dataset);
+  else if (e.target === $("#dlg")) $("#dlg").close(); // click on the backdrop
+});
+document.addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (e.target.dataset.form !== "name") return;
+  S.name = new FormData(e.target).get("name").trim();
+  save(); toast(S.name ? `Welcome, ${S.name}` : "Name cleared"); render();
+});
+document.addEventListener("input", (e) => {
+  if (e.target.id !== "guide-q") return;
+  ui.q = e.target.value;
+  $("#guide-body").innerHTML = guideBody();
+});
+/* Number keys answer, Enter moves on. */
+document.addEventListener("keydown", (e) => {
+  if (e.target.matches("input") || $("#dlg").open || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (/^[1-4]$/.test(e.key)) {
+    const b = document.querySelectorAll("#view .opt:not(:disabled)")[+e.key - 1];
+    if (b) { e.preventDefault(); b.click(); }
+  }
+});
+addEventListener("hashchange", () => {
+  const v = location.hash.slice(1);
+  if (VIEWS.includes(v) && (v !== ui.view || ui.sub)) go(v);
+});
+
+const startView = location.hash.slice(1);
+ui.view = VIEWS.includes(startView) ? startView : "home";
+render();
+
+</script>
+<!--/ARTIFACT-MAIN-->
+</body>
+</html>
