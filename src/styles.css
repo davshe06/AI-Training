@@ -287,6 +287,52 @@ table.ref th { text-align: left; font-family: var(--font-head); font-size: 1.05r
 table.ref td { padding: 10px 0; vertical-align: top; color: var(--ink-2); }
 table.ref tr + tr > * { border-top: 1px solid var(--line); }
 .scroll-x { overflow-x: auto; }
+/* The podium sits on the scoreboard band, which is dark in both themes, so
+   the medal metals are fixed colours rather than theme tokens. */
+.podium {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end;
+  background: var(--band); border-radius: var(--r-card); padding: 28px 18px 0; box-shadow: var(--shadow); overflow: hidden;
+}
+.spot {
+  --metal: #f0b03c; order: 2; text-align: center; color: var(--on-band); min-width: 0;
+  background: var(--band-2); border-radius: 14px 14px 0 0; border-top: 4px solid var(--metal);
+  padding: 0 12px 26px; animation: rise 0.45s ease-out backwards;
+}
+.spot.p2 { --metal: #c9d3db; order: 1; padding-bottom: 14px; animation-delay: 0.1s; }
+.spot.p3 { --metal: #d39562; order: 3; padding-bottom: 6px; animation-delay: 0.2s; }
+.spot.p1 { padding-bottom: 44px; }
+.medal-xl {
+  width: 58px; height: 58px; margin: -29px auto 8px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--metal); color: #1d2d3d; font-family: var(--font-head); font-size: 1.9rem; font-weight: 600;
+  box-shadow: 0 0 0 4px var(--band), 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.spot.p1 .medal-xl { width: 72px; height: 72px; margin-top: -36px; font-size: 2.4rem; }
+.spot .eyebrow { color: var(--metal); }
+.spot h2 { font-size: 1.5rem; overflow-wrap: anywhere; }
+.spot.p1 h2 { font-size: 1.9rem; }
+.spot .pxp { font-family: var(--font-head); font-weight: 600; font-size: 2.3rem; line-height: 1.1; color: var(--metal); }
+.spot.p1 .pxp { font-size: 3.2rem; }
+.spot .pxp span { font-size: 0.45em; letter-spacing: 0.08em; margin-left: 5px; }
+.spot .sub { font-size: 0.85rem; color: var(--on-band-2); }
+.spot.me { outline: 2px solid var(--metal); outline-offset: -2px; }
+.spot.open { opacity: 0.55; }
+.spot.open h2 { color: var(--on-band-2); }
+.chase { font-weight: 700; text-align: center; }
+@media (max-width: 620px) {
+  .podium { grid-template-columns: minmax(0, 1fr); padding: 14px; gap: 10px; }
+  .spot, .spot.p1, .spot.p2, .spot.p3 {
+    order: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 12px; align-items: center;
+    text-align: left; border-radius: 12px; border-top: 0; border-left: 4px solid var(--metal); padding: 10px 12px;
+  }
+  .spot .medal-xl, .spot.p1 .medal-xl { width: 44px; height: 44px; margin: 0; font-size: 1.5rem; grid-row: 1 / span 3; box-shadow: none; }
+  .spot .eyebrow, .spot h2, .spot .sub { grid-column: 2; }
+  .spot h2, .spot.p1 h2 { font-size: 1.3rem; }
+  .spot .pxp, .spot.p1 .pxp { grid-column: 3; grid-row: 1 / span 3; font-size: 1.7rem; }
+}
+table.board .xpcell { min-width: 150px; }
+table.board .xpcell b { display: inline-block; min-width: 4ch; }
+table.board .xpcell .bar { display: inline-block; width: 90px; margin-left: 10px; vertical-align: middle; }
+table.board .xpcell .bar i { background: var(--gold-fill); }
 table.board { width: 100%; border-collapse: collapse; font-size: 0.98rem; }
 table.board th { font-family: var(--font-head); font-size: 0.82rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-3); text-align: left; padding: 6px 12px 10px; white-space: nowrap; }
 table.board td { padding: 11px 12px; border-top: 1px solid var(--line); white-space: nowrap; }

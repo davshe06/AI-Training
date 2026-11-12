@@ -685,18 +685,33 @@ function viewBoard() {
   else if (!b.rows.length) body = `<section class="card"><p class="muted">Nobody is on the board yet. Enter your name and finish a lesson to be first.</p></section>`;
   else {
     const me = b.rows.find((r) => r.me);
-    body = `${me ? `<p class="muted num">You are ranked ${me.rank} of ${me.total}.</p>` : ""}
-      <section class="card"><div class="scroll-x"><table class="board">
-        <thead><tr><th class="r">#</th><th>Player</th><th>Level</th><th class="r">XP</th><th class="r">Modules</th><th class="r">Badges</th><th class="r">Tryout</th></tr></thead>
-        <tbody>${b.rows.map((r) => `<tr class="${r.me ? "me" : ""}">
-          <td class="r num rank ${r.rank <= 3 ? "top" : ""}">${r.rank}</td>
+    const top = b.rows.slice(0, 3), rest = b.rows.slice(3), lead = Math.max(1, b.rows[0].xp);
+    // The next person up the board, and how far ahead they are.
+    const ahead = me ? b.rows[b.rows.indexOf(me) - 1] : null;
+    const chase = !me ? "" : me.rank === 1 ? "You are in first place."
+      : `You are ranked ${me.rank} of ${me.total}.${ahead ? ` ${ahead.xp - me.xp + 1} XP to pass ${ahead.name}.` : ""}`;
+    const place = ["First place", "Second place", "Third place"];
+    const spot = (r, i) => `<div class="spot p${i + 1} ${r.me ? "me" : ""}">
+        <div class="medal-xl num">${i + 1}</div>
+        <p class="eyebrow">${place[i]}${r.me ? " · you" : ""}</p>
+        <h2>${esc(r.name)}</h2>
+        <div class="pxp num">${r.xp}<span>XP</span></div>
+        <p class="sub num">${esc(LEVELS[levelOf(r.xp)][1])} · ${r.modules}/${MODULES.length} modules · ${r.badges} badges</p>
+      </div>`;
+    const open = (i) => `<div class="spot p${i + 1} open"><div class="medal-xl num">${i + 1}</div><p class="eyebrow">${place[i]}</p><h2>Open</h2><p class="sub">Up for grabs</p></div>`;
+    body = `<section class="podium">${[0, 1, 2].map((i) => (top[i] ? spot(top[i], i) : open(i))).join("")}</section>
+      ${chase ? `<p class="chase num">${esc(chase)}</p>` : ""}
+      ${rest.length ? `<section class="card"><div class="scroll-x"><table class="board">
+        <thead><tr><th class="r">#</th><th>Player</th><th>Level</th><th>XP</th><th class="r">Modules</th><th class="r">Badges</th><th class="r">Tryout</th></tr></thead>
+        <tbody>${rest.map((r) => `<tr class="${r.me ? "me" : ""}">
+          <td class="r num rank">${r.rank}</td>
           <td class="who">${esc(r.name)}${r.me ? ` <span class="chip gold">You</span>` : ""}</td>
           <td>${esc(LEVELS[levelOf(r.xp)][1])}</td>
-          <td class="r num"><b>${r.xp}</b></td>
+          <td class="xpcell num"><b>${r.xp}</b><span class="bar"><i style="width:${Math.round((r.xp / lead) * 100)}%"></i></span></td>
           <td class="r num">${r.modules}/${MODULES.length}</td>
           <td class="r num">${r.badges}/${BADGES.length}</td>
           <td class="r num">${r.tryout == null ? "—" : `${r.tryout}/${TRYOUT_SIZE}`}</td></tr>`).join("")}</tbody>
-      </table></div></section>`;
+      </table></div></section>` : ""}`;
   }
   return `<div class="stack">
     <div class="row spread"><div><h1>Leaderboard</h1><p class="muted">Everyone in camp, ranked by XP.</p></div>
